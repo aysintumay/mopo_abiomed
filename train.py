@@ -26,6 +26,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo-name", type=str, default="mopo")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
+    parser.add_argument("--pretrained", type=bool, default=True)
+
     
     parser.add_argument("--task", type=str, default="Abiomed-v0")
     parser.add_argument("--seed", type=int, default=1)
@@ -121,7 +123,7 @@ def train(args=get_args()):
         entry_point='abiomed_env:AbiomedEnv',  
         max_episode_steps = 1000,
         )
-        env = gym.make(args.task, args = args, logger = logger, data_name = "train", pretrained = True)
+        env = gym.make(args.task, args = args, logger = logger, data_name = "train", pretrained = args.pretrained)
         dataset = d4rl.qlearning_dataset(env)
     else:
         env = gym.make(args.task)

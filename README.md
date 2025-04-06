@@ -17,11 +17,28 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 
 ```
 # for hopper-medium-replay-v0 task
-python train.py --task "hopper-medium-replay-v0" --rollout-length 5 --reward-penalty-coef 1.0
+python train.py --task "hopper-medium-replay-v0" --rollout-length 5 --reward-penalty-coef 1.0 
+
 # for walker2d-medium-replay-v0 task
-python train.py --task "walker2d-medium-replay-v0" --rollout-length 1 --reward-penalty-coef 1.0
-# for halfcheetah-medium-replay-v0 task
-python train.py --task "halfcheetah-medium-replay-v0" --rollout-length 5 --reward-penalty-coef 1.0
+python train.py --task "walker2d-random-v2" --rollout-length 1 --reward-penalty-coef 1.0 
+
+# for halfcheetah-medium-v0 task
+python train.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 1.0 
+
+```
+To train the world model, train.py() -> pretrained = False
+To train the dynamics model, comment out ```dynamics_model.load_model()``` and decomment ```trainer.train_dynamics()```
+Change the path of the dynamics model in model.transition_model.load_model()
+
+
+After training with different seeds;
+
+
+## Test
+```
+python test.py --task "halfcheetah-random-v2" --eval_episodes 1e6
+python test.py --task "walker2d-random-v2" --eval_episodes 1e6
+
 ```
 
 For different mujoco tasks, the only differences of hyperparameters are "rollout-length" and "reward-penalty-coef". Please see the original paper for other tasks' hyperparameters.
