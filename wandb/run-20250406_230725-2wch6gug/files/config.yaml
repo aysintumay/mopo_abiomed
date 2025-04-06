@@ -1,0 +1,105 @@
+_wandb:
+    value:
+        cli_version: 0.19.8
+        m: []
+        python_version: 3.8.20
+        t:
+            "1":
+                - 1
+                - 2
+                - 3
+                - 55
+            "2":
+                - 1
+                - 2
+                - 3
+                - 55
+            "3":
+                - 16
+                - 23
+                - 24
+                - 55
+            "4": 3.8.20
+            "5": 0.19.8
+            "8":
+                - 5
+            "12": 0.19.8
+            "13": linux-x86_64
+actor_lr:
+    value: 0.0003
+algo_name:
+    value: mopo
+alpha:
+    value: 0.2
+alpha_lr:
+    value: 0.0003
+auto_alpha:
+    value: true
+batch_size:
+    value: 256
+bc:
+    value: 64
+critic_lr:
+    value: 0.0003
+decoder_dropout:
+    value: 0
+device:
+    value: cuda
+dim_model:
+    value: 256
+dynamics_lr:
+    value: 0.001
+dynamics_model_dir:
+    value: null
+encoder_dropout:
+    value: 0.1
+encs:
+    value: 2
+epoch:
+    value: 1
+eval_episodes:
+    value: 2000
+gamma:
+    value: 0.99
+log_freq:
+    value: 1000
+logdir:
+    value: log
+lr:
+    value: 0.001
+model_retain_epochs:
+    value: 5
+n_elites:
+    value: 5
+n_ensembles:
+    value: 7
+nepochs:
+    value: 20
+output_dim:
+    value: 132
+path:
+    value: /data/abiomed_tmp/processed
+policy_path:
+    value: log/Abiomed-v0/mopo/seed_5_0331_231300-Abiomed_v0_mopo/policy.pth
+real_ratio:
+    value: 0.05
+reward_penalty_coef:
+    value: 1
+rollout_batch_size:
+    value: 5000
+rollout_freq:
+    value: 1000
+rollout_length:
+    value: 5
+seed:
+    value: 1
+seq_dim:
+    value: 12
+step_per_epoch:
+    value: 1000
+target_entropy:
+    value: -1
+task:
+    value: Abiomed-v0
+tau:
+    value: 0.005

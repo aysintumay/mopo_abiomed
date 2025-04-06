@@ -1,0 +1,6 @@
+2025-04-06 23:45:16,830 INFO    MainThread:153438 [wandb_init.py:setup_run_log_directory():647] Logging user logs to /home/ubuntu/mopo/wandb/run-20250406_234516-7wzevl22/logs/debug.log
+2025-04-06 23:45:16,831 INFO    MainThread:153438 [wandb_init.py:setup_run_log_directory():648] Logging internal logs to /home/ubuntu/mopo/wandb/run-20250406_234516-7wzevl22/logs/debug-internal.log
+2025-04-06 23:45:16,831 INFO    MainThread:153438 [wandb_init.py:init():761] calling init triggers
+2025-04-06 23:45:16,831 INFO    MainThread:153438 [wandb_init.py:init():766] wandb.init called with sweep_config: {}
+config: {'_wandb': {}}
+2025-04-06 23:45:16,831 INFO    MainThread:153438 [wandb_init.py:init():776] wandb.init() called while a run is active

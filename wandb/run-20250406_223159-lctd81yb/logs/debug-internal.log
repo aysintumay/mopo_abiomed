@@ -1,0 +1,7 @@
+{"time":"2025-04-06T22:31:59.633529163Z","level":"INFO","msg":"stream: starting","core version":"0.19.8","symlink path":"/home/ubuntu/mopo/wandb/run-20250406_223159-lctd81yb/logs/debug-core.log"}
+{"time":"2025-04-06T22:31:59.847245975Z","level":"INFO","msg":"created new stream","id":"lctd81yb"}
+{"time":"2025-04-06T22:31:59.847317466Z","level":"INFO","msg":"stream: started","id":"lctd81yb"}
+{"time":"2025-04-06T22:31:59.84768088Z","level":"INFO","msg":"writer: Do: started","stream_id":"lctd81yb"}
+{"time":"2025-04-06T22:31:59.847718311Z","level":"INFO","msg":"handler: started","stream_id":"lctd81yb"}
+{"time":"2025-04-06T22:31:59.847969624Z","level":"INFO","msg":"sender: started","stream_id":"lctd81yb"}
+{"time":"2025-04-06T22:32:00.054717029Z","level":"INFO","msg":"Starting system monitor"}

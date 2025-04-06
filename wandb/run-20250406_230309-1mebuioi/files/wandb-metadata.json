@@ -1,0 +1,84 @@
+{
+  "os": "Linux-5.15.0-136-generic-x86_64-with-glibc2.17",
+  "python": "CPython 3.8.20",
+  "startedAt": "2025-04-06T23:03:09.244913Z",
+  "program": "/home/ubuntu/mopo/test.py",
+  "codePath": "test.py",
+  "git": {
+    "remote": "git@github.com:aysintumay/mopo_abiomed.git",
+    "commit": "f42473fa144d00b58b0c67cd56cbab961a560251"
+  },
+  "email": "aysintumay@gmail.com",
+  "root": "/home/ubuntu/mopo",
+  "host": "aysin",
+  "executable": "/home/ubuntu/miniconda3/envs/mopo/bin/python",
+  "codePathLocal": "test.py",
+  "cpu_count": 56,
+  "cpu_count_logical": 12,
+  "gpu": "NVIDIA A100 80GB PCIe",
+  "gpu_count": 8,
+  "disk": {
+    "/": {
+      "total": "280790171648",
+      "used": "201996369920"
+    }
+  },
+  "memory": {
+    "total": "128000000000"
+  },
+  "cpu": {
+    "count": 56,
+    "countLogical": 12
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA A100 80GB PCIe",
+      "memoryTotal": "85899345920",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100 80GB PCIe",
+      "memoryTotal": "85899345920",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100 80GB PCIe",
+      "memoryTotal": "85899345920",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100 80GB PCIe",
+      "memoryTotal": "85899345920",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100 80GB PCIe",
+      "memoryTotal": "85899345920",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100-PCIE-40GB",
+      "memoryTotal": "42949672960",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100 80GB PCIe",
+      "memoryTotal": "85899345920",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100-PCIE-40GB",
+      "memoryTotal": "42949672960",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    }
+  ],
+  "cudaVersion": "12.7"
+}

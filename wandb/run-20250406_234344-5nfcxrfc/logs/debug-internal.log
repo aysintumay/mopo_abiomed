@@ -1,0 +1,15 @@
+{"time":"2025-04-06T23:43:44.735466659Z","level":"INFO","msg":"stream: starting","core version":"0.19.8","symlink path":"/home/ubuntu/mopo/wandb/run-20250406_234344-5nfcxrfc/logs/debug-core.log"}
+{"time":"2025-04-06T23:43:44.948011515Z","level":"INFO","msg":"created new stream","id":"5nfcxrfc"}
+{"time":"2025-04-06T23:43:44.948093156Z","level":"INFO","msg":"stream: started","id":"5nfcxrfc"}
+{"time":"2025-04-06T23:43:44.948128696Z","level":"INFO","msg":"writer: Do: started","stream_id":"5nfcxrfc"}
+{"time":"2025-04-06T23:43:44.948142676Z","level":"INFO","msg":"sender: started","stream_id":"5nfcxrfc"}
+{"time":"2025-04-06T23:43:44.948181247Z","level":"INFO","msg":"handler: started","stream_id":"5nfcxrfc"}
+{"time":"2025-04-06T23:43:45.153498604Z","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-04-06T23:44:01.60934753Z","level":"INFO","msg":"stream: closing","id":"5nfcxrfc"}
+{"time":"2025-04-06T23:44:01.609430391Z","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-04-06T23:44:01.610755527Z","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-04-06T23:44:02.018054829Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-04-06T23:44:02.129721363Z","level":"INFO","msg":"handler: closed","stream_id":"5nfcxrfc"}
+{"time":"2025-04-06T23:44:02.129745153Z","level":"INFO","msg":"writer: Close: closed","stream_id":"5nfcxrfc"}
+{"time":"2025-04-06T23:44:02.129766614Z","level":"INFO","msg":"sender: closed","stream_id":"5nfcxrfc"}
+{"time":"2025-04-06T23:44:02.129901515Z","level":"INFO","msg":"stream: closed","id":"5nfcxrfc"}

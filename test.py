@@ -26,9 +26,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo-name", type=str, default="mopo")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
-    parser.add_argument("--policy_path" , type=str, default="log/abiomed-v0/mopo/seed_1_1024_abiomed-v0_mopo/best_policy.pth")
+    parser.add_argument("--policy_path" , type=str, default="log/halfcheetah-expert-v2/mopo/seed_1_0404_173844-halfcheetah_expert_v2_mopo/policy_halfcheetah-expert-v2.pth")
     
-    parser.add_argument("--task", type=str, default="Abiomed-v0")
+    parser.add_argument("--task", type=str, default="halfcheetah-expert-v2")
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
@@ -53,7 +53,7 @@ def get_args():
 
     parser.add_argument("--epoch", type=int, default=1) #1000
     parser.add_argument("--step-per-epoch", type=int, default=1000)
-    parser.add_argument("--eval_episodes", type=int, default=500)
+    parser.add_argument("--eval_episodes", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--log-freq", type=int, default=1000)
@@ -102,16 +102,23 @@ def _evaluate(policy, eval_env, episodes):
                 eval_ep_info_buffer.append(
                     {"episode_reward": episode_reward, "episode_length": episode_length}
                 )
+                
+
+                #d4rl don't have REF_MIN_SCORE and REF_MAX_SCORE for v2 environments
+                dset_name = eval_env.unwrapped.spec.name+'-v0'
+                print(d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100)
+
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
                 obs = eval_env.reset()
-        
+
         return {
             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
             "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
         }
 
-def evaluate(policy, env, trainer, episodes=500):  
+
+def evaluate(policy, env, trainer, episodes=500, step_per_epoch = 1000):  
     policy.eval()
     obs = env.reset()
     
@@ -120,7 +127,8 @@ def evaluate(policy, env, trainer, episodes=500):
     episode_reward, episode_length = 0, 0
     acc_total = 0
     acc_1_off_total = 0
-    while num_episodes < episodes:
+    terminal_counter = 0
+    while num_episodes <= episodes:
         act = env.get_pl()
         if num_episodes % 2 == 0:
             next_state_gt = env.get_next_obs() #next state gt
@@ -137,24 +145,33 @@ def evaluate(policy, env, trainer, episodes=500):
         episode_reward += reward
         episode_length += 1
 
-        num_episodes +=1
+        terminal_counter += 1
         acc, acc_1_off = trainer.eval_bcq(action, full_pl)
         acc_total += acc
         acc_1_off_total += acc_1_off
 
-        if num_episodes == episodes:
+        obs = next_obs.reshape(1,-1)
+
+        if terminal_counter == step_per_epoch:
 
             trainer.plot_predictions_rl(obs.reshape(1,90,12), next_state_gt.reshape(1,90,12), next_obs.reshape(1,90,12), action.reshape(1,90), full_pl.reshape(1,90), num_episodes)
             eval_ep_info_buffer.append(
                 {"episode_reward": episode_reward,
                     "episode_length": episode_length,
-                    "episode_accurcy": acc_total/episodes, 
-                    "episode_1_off_accuracy": acc_1_off_total/episodes}
+                    "episode_accurcy": acc_total/step_per_epoch, 
+                    "episode_1_off_accuracy": acc_1_off_total/step_per_epoch}
             )
+            terminal_counter = 0
             episode_reward, episode_length = 0, 0
+            acc_total, acc_1_off_total = 0, 0
             obs = env.reset()
-            
-        obs = next_obs.reshape(1,-1)
+            num_episodes +=1
+
+            print("episode_reward", episode_reward, 
+                  "episode_length", episode_length,
+                  "episode_accuracy", acc_total/step_per_epoch, 
+                  "episode_1_off_accuracy", acc_1_off_total/step_per_epoch)
+
     return {
             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
             "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer],
@@ -166,47 +183,42 @@ def evaluate(policy, env, trainer, episodes=500):
 def get_eval(policy, env, logger, trainer, args,):
     reward_l, acc_l, off_acc = [], [], []
     reward_std_l, acc_std_l, off_acc_std = [], [], []
-    for e in range(args.epoch):
-        if env.name == 'Abiomed-v0':
-            eval_info = evaluate(policy, env, trainer, episodes=args.eval_episodes)
-        else:
-            eval_info = _evaluate(policy, env, trainer, episodes=args.eval_episodes)
-        ep_reward_mean, ep_reward_std = np.mean(eval_info[0]["eval/episode_reward"]), np.std(eval_info[0]["eval/episode_reward"])
-        ep_length_mean, ep_length_std = np.mean(eval_info[0]["eval/episode_length"]), np.std(eval_info[0]["eval/episode_length"])
-        if env.name == 'Abiomed-v0':
-            ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info[0]["eval/episode_accuracy"]), np.std(eval_info[0]["eval/episode_accuracy"])
-            ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info[0]["eval/episode_1_off_accuracy"]), np.std(eval_info[0]["eval/episode_1_off_accuracy"])
-        
-        
-        reward_l.append(ep_reward_mean)
-        reward_std_l.append(ep_reward_std)
-        if env.name == 'Abiomed-v0':
-            acc_l.append(ep_accuracy_mean)
-            off_acc.append(ep_1_off_accuracy_mean)
-            acc_std_l.append(ep_accuracy_std)
-            off_acc_std.append(ep_1_off_accuracy_std)
-        
+    if args.task == 'Abiomed-v0':
+        eval_info = evaluate(policy, env, trainer, episodes=args.eval_episodes, step_per_epoch = args.step_per_epoch)
+    else:
+        eval_info = _evaluate(policy, env, args.eval_episodes)
+    ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
+    ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
+    if args.task == 'Abiomed-v0':
+        ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info[0]["eval/episode_accuracy"]), np.std(eval_info[0]["eval/episode_accuracy"])
+        ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info[0]["eval/episode_1_off_accuracy"]), np.std(eval_info[0]["eval/episode_1_off_accuracy"])
+
+    if args.task == 'Abiomed-v0':
+        logger.record("eval/episode_accuracy", ep_accuracy_mean, args.eval_episodes, printed=False)
+        logger.record("eval/episode_1_off_accuracy", ep_1_off_accuracy_mean, args.eval_episodes, printed=False)
+        logger.print(f"episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
+                            episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f},\
+                            episode_accuracy: {ep_accuracy_mean:.3f} ± {ep_accuracy_std:.3f},\
+                            episode_1_off_accuracy: {ep_1_off_accuracy_mean:.3f} ± {ep_1_off_accuracy_std:.3f}")
+    else:
         logger.record("eval/episode_reward", ep_reward_mean, args.eval_episodes, printed=False)
         logger.record("eval/episode_length", ep_length_mean, args.eval_episodes, printed=False)
+        logger.print(f"episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
+                            episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f}")
+    # if env.name == 'Abiomed-v0':
+    #     plot_accuracy(np.array(reward_l), np.array(reward_std_l)/args.eval_episodes, 'Average Return')
+    #     plot_accuracy(np.array(acc_l), np.array(acc_std_l)/args.eval_episodes, 'Accuracy')
+    #     plot_accuracy(np.array(off_acc), np.array(off_acc_std)/args.eval_episodes, '1-off Accuracy')
 
-        if env.name == 'Abiomed-v0':
-            logger.record("eval/episode_accuracy", ep_accuracy_mean, args.eval_episodes, printed=False)
-            logger.record("eval/episode_1_off_accuracy", ep_1_off_accuracy_mean, args.eval_episodes, printed=False)
-            logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
-                                episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f},\
-                                episode_accuracy: {ep_accuracy_mean:.3f} ± {ep_accuracy_std:.3f},\
-                                episode_1_off_accuracy: {ep_1_off_accuracy_mean:.3f} ± {ep_1_off_accuracy_std:.3f}")
-        else:
-            logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
-                                episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f}")
-    if env.name == 'Abiomed-v0':
-        plot_accuracy(np.array(reward_l), np.array(reward_std_l)/args.eval_episodes, 'Average Return')
-        plot_accuracy(np.array(acc_l), np.array(acc_std_l)/args.eval_episodes, 'Accuracy')
-        plot_accuracy(np.array(off_acc), np.array(off_acc_std)/args.eval_episodes, '1-off Accuracy')
+    if args.task != 'Abiomed-v0':
+        dset_name = env.unwrapped.spec.name+'-v0'
+        normalized_score_mean = d4rl.get_normalized_score(dset_name, ep_reward_mean)*100
+        # normalized_score_std = d4rl.get_normalized_score(env, ep_reward_std/ep_length_std)
+        logger.record("normalized_episode_reward", normalized_score_mean, ep_length_mean, printed=False)
+    else:
+        logger.record("episode_reward", ep_reward_mean/ep_length_mean, args.eval_episodes, printed=False)
 
-    logger.record("avg episode_reward", np.array(reward_l).mean(), args.eval_episodes, printed=False)
-
-    if env.name == 'Abiomed-v0':
+    if args.task == 'Abiomed-v0':
         logger.record("avg episode_accuracy", np.array(acc_l).mean(), args.eval_episodes, printed=False)
         logger.record("avg episode_1_off_accuracy", np.array(off_acc).mean(), args.eval_episodes, printed=False)
 
@@ -230,7 +242,7 @@ def test(args=get_args()):
 
     # log
     t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-    log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+    log_file = f'test_seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
     log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
     writer = SummaryWriter(log_path)
     writer.add_text("args", str(args))
