@@ -1,0 +1,12 @@
+Epoch #1: episode_reward: -1.755 ± 0.902,                               episode_length: 1000.000 ± 0.000
+Epoch #2: episode_reward: -1.325 ± 1.008,                               episode_length: 1000.000 ± 0.000
+Epoch #3: episode_reward: 355.634 ± 8.753,                               episode_length: 1000.000 ± 0.000
+Epoch #4: episode_reward: 1178.317 ± 43.202,                               episode_length: 1000.000 ± 0.000
+Epoch #5: episode_reward: 638.270 ± 568.787,                               episode_length: 1000.000 ± 0.000
+Epoch #6: episode_reward: 1130.930 ± 605.414,                               episode_length: 1000.000 ± 0.000
+Epoch #7: episode_reward: 1489.212 ± 842.865,                               episode_length: 1000.000 ± 0.000
+Epoch #8: episode_reward: 1809.269 ± 904.612,                               episode_length: 1000.000 ± 0.000
+Epoch #9: episode_reward: 2252.958 ± 312.887,                               episode_length: 1000.000 ± 0.000
+Epoch #10: episode_reward: 1319.493 ± 1143.405,                               episode_length: 1000.000 ± 0.000
+Epoch #11: episode_reward: 318.586 ± 473.502,                               episode_length: 1000.000 ± 0.000
+Epoch #12: episode_reward: -2.642 ± 210.016,                               episode_length: 1000.000 ± 0.000

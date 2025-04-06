@@ -1,0 +1,6 @@
+Epoch #1: episode_reward: 17133.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.687 ± 0.000,                               episode_1_off_accuracy: 0.717 ± 0.000
+Epoch #2: episode_reward: 17119.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.605 ± 0.000,                               episode_1_off_accuracy: 0.738 ± 0.000
+Epoch #3: episode_reward: 17126.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.492 ± 0.000,                               episode_1_off_accuracy: 0.762 ± 0.000
+Epoch #4: episode_reward: 17126.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.286 ± 0.000,                               episode_1_off_accuracy: 0.768 ± 0.000
+Epoch #5: episode_reward: 17133.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.198 ± 0.000,                               episode_1_off_accuracy: 0.637 ± 0.000
+total time: 481.265s

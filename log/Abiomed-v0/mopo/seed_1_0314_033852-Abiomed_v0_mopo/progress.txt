@@ -1,0 +1,33 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.002
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+loss/model_eval_mse_loss: 0.000
+total time: 1244.491s
+Epoch #1: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #2: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #3: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #4: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #5: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #6: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #7: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #8: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #9: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #10: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #11: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #12: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #13: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #14: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #15: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #16: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #17: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #18: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #19: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+Epoch #20: episode_reward: 24000.000 ± 0.000, episode_length: 1000.000 ± 0.000
+total time: 24779.881s

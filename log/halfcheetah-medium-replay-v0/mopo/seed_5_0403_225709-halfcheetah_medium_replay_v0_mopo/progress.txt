@@ -1,0 +1,4 @@
+Epoch #1: episode_reward: -1.755 ± 0.902,                               episode_length: 1000.000 ± 0.000
+Epoch #2: episode_reward: -1.325 ± 1.008,                               episode_length: 1000.000 ± 0.000
+Epoch #3: episode_reward: 355.634 ± 8.753,                               episode_length: 1000.000 ± 0.000
+total time: 102.498s

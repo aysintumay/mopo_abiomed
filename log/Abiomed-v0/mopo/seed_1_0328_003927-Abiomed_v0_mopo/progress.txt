@@ -1,0 +1,3 @@
+Epoch #1: episode_reward: 17140.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.120 ± 0.000,                               episode_1_off_accuracy: 0.139 ± 0.000
+Epoch #2: episode_reward: 17119.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.141 ± 0.000,                               episode_1_off_accuracy: 0.159 ± 0.000
+Epoch #3: episode_reward: 17147.000 ± 0.000,                               episode_length: 1000.000 ± 0.000,                               episode_accuracy: 0.096 ± 0.000,                               episode_1_off_accuracy: 0.113 ± 0.000
