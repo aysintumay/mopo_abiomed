@@ -48,6 +48,13 @@ For different mujoco tasks, the only differences of hyperparameters are "rollout
 ```
 python plotter.py --root-dir "log" --task "hopper-medium-replay-v0"
 ```
+## Scoring
+
+```scorer.py``` outputs the average normalized and unnormalized returns. task parameter is where the test results are saved.
+
+```
+python scorer.py --task "half-cheetah-v2"
+```
 
 # Reproduced results
 All experiments were run for 2 random seeds each and learning curves are smoothed by averaging over a window of 10 epochs.
