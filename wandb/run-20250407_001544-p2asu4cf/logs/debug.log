@@ -1,0 +1,29 @@
+2025-04-07 00:15:44,163 INFO    MainThread:155211 [wandb_setup.py:_flush():67] Current SDK version is 0.19.8
+2025-04-07 00:15:44,163 INFO    MainThread:155211 [wandb_setup.py:_flush():67] Configure stats pid to 155211
+2025-04-07 00:15:44,163 INFO    MainThread:155211 [wandb_setup.py:_flush():67] Loading settings from /home/ubuntu/.config/wandb/settings
+2025-04-07 00:15:44,163 INFO    MainThread:155211 [wandb_setup.py:_flush():67] Loading settings from /home/ubuntu/mopo/wandb/settings
+2025-04-07 00:15:44,163 INFO    MainThread:155211 [wandb_setup.py:_flush():67] Loading settings from environment variables
+2025-04-07 00:15:44,163 INFO    MainThread:155211 [wandb_init.py:setup_run_log_directory():647] Logging user logs to /home/ubuntu/mopo/wandb/run-20250407_001544-p2asu4cf/logs/debug.log
+2025-04-07 00:15:44,164 INFO    MainThread:155211 [wandb_init.py:setup_run_log_directory():648] Logging internal logs to /home/ubuntu/mopo/wandb/run-20250407_001544-p2asu4cf/logs/debug-internal.log
+2025-04-07 00:15:44,164 INFO    MainThread:155211 [wandb_init.py:init():761] calling init triggers
+2025-04-07 00:15:44,164 INFO    MainThread:155211 [wandb_init.py:init():766] wandb.init called with sweep_config: {}
+config: {'algo_name': 'mopo', 'policy_path': 'log/halfcheetah-expert-v2/mopo/seed_1_0404_173844-halfcheetah_expert_v2_mopo/policy_halfcheetah-expert-v2.pth', 'task': 'halfcheetah-expert-v2', 'seed': 1, 'actor_lr': 0.0003, 'critic_lr': 0.0003, 'gamma': 0.99, 'tau': 0.005, 'alpha': 0.2, 'auto_alpha': True, 'target_entropy': -1, 'alpha_lr': 0.0003, 'dynamics_lr': 0.001, 'n_ensembles': 7, 'n_elites': 5, 'reward_penalty_coef': 1.0, 'rollout_length': 5, 'rollout_batch_size': 5000, 'rollout_freq': 1000, 'model_retain_epochs': 5, 'real_ratio': 0.05, 'dynamics_model_dir': None, 'epoch': 1, 'step_per_epoch': 1000, 'eval_episodes': 3, 'batch_size': 256, 'logdir': 'log', 'log_freq': 1000, 'device': 'cuda', 'seq_dim': 12, 'output_dim': 132, 'bc': 64, 'nepochs': 20, 'encs': 2, 'lr': 0.001, 'encoder_dropout': 0.1, 'decoder_dropout': 0, 'dim_model': 256, 'path': '/data/abiomed_tmp/processed', '_wandb': {}}
+2025-04-07 00:15:44,164 INFO    MainThread:155211 [wandb_init.py:init():784] starting backend
+2025-04-07 00:15:44,164 INFO    MainThread:155211 [wandb_init.py:init():788] sending inform_init request
+2025-04-07 00:15:44,211 INFO    MainThread:155211 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2025-04-07 00:15:44,211 INFO    MainThread:155211 [wandb_init.py:init():798] backend started and connected
+2025-04-07 00:15:44,220 INFO    MainThread:155211 [wandb_init.py:init():891] updated telemetry
+2025-04-07 00:15:44,265 INFO    MainThread:155211 [wandb_init.py:init():915] communicating run to backend with 90.0 second timeout
+2025-04-07 00:15:44,702 INFO    MainThread:155211 [wandb_init.py:init():990] starting run threads in backend
+2025-04-07 00:15:45,051 INFO    MainThread:155211 [wandb_run.py:_console_start():2375] atexit reg
+2025-04-07 00:15:45,052 INFO    MainThread:155211 [wandb_run.py:_redirect():2227] redirect: wrap_raw
+2025-04-07 00:15:45,052 INFO    MainThread:155211 [wandb_run.py:_redirect():2292] Wrapping output streams.
+2025-04-07 00:15:45,053 INFO    MainThread:155211 [wandb_run.py:_redirect():2315] Redirects installed.
+2025-04-07 00:15:45,055 INFO    MainThread:155211 [wandb_init.py:init():1032] run started, returning control to user process
+2025-04-07 00:15:53,546 INFO    MainThread:155211 [wandb_init.py:setup_run_log_directory():647] Logging user logs to /home/ubuntu/mopo/wandb/run-20250407_001553-p2asu4cf/logs/debug.log
+2025-04-07 00:15:53,546 INFO    MainThread:155211 [wandb_init.py:setup_run_log_directory():648] Logging internal logs to /home/ubuntu/mopo/wandb/run-20250407_001553-p2asu4cf/logs/debug-internal.log
+2025-04-07 00:15:53,546 INFO    MainThread:155211 [wandb_init.py:init():761] calling init triggers
+2025-04-07 00:15:53,546 INFO    MainThread:155211 [wandb_init.py:init():766] wandb.init called with sweep_config: {}
+config: {'_wandb': {}}
+2025-04-07 00:15:53,546 INFO    MainThread:155211 [wandb_init.py:init():776] wandb.init() called while a run is active
+2025-04-07 00:15:59,057 INFO    MsgRouterThr:155211 [mailbox.py:close():129] Closing mailbox, abandoning 1 handles.

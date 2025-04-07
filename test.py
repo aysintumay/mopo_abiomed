@@ -26,9 +26,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo-name", type=str, default="mopo")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
-    parser.add_argument("--policy_path" , type=str, default="log/halfcheetah-expert-v2/mopo/seed_1_0404_173844-halfcheetah_expert_v2_mopo/policy_halfcheetah-expert-v2.pth")
+    parser.add_argument("--policy_path" , type=str, default="log/halfcheetah_medium_plot/mopo/seed_5_0403_230811-halfcheetah_medium_replay_v0_mopo/policy_halfcheetah-medium-replay-v0.pth")
     
-    parser.add_argument("--task", type=str, default="halfcheetah-expert-v2")
+    parser.add_argument("--task", type=str, default="halfcheetah-medium-v2")
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
@@ -213,8 +213,10 @@ def get_eval(policy, env, logger, trainer, args,):
     if args.task != 'Abiomed-v0':
         dset_name = env.unwrapped.spec.name+'-v0'
         normalized_score_mean = d4rl.get_normalized_score(dset_name, ep_reward_mean)*100
-        # normalized_score_std = d4rl.get_normalized_score(env, ep_reward_std/ep_length_std)
+        normalized_score_std = d4rl.get_normalized_score(dset_name, ep_reward_std)*100
         logger.record("normalized_episode_reward", normalized_score_mean, ep_length_mean, printed=False)
+        logger.print(f"normalized_episode_reward: {normalized_score_mean:.3f} ± {normalized_score_std:.3f},\
+                            episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f}")
     else:
         logger.record("episode_reward", ep_reward_mean/ep_length_mean, args.eval_episodes, printed=False)
 
@@ -243,7 +245,7 @@ def test(args=get_args()):
     # log
     t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
     log_file = f'test_seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+    log_path = os.path.join(args.logdir, args.task, args.algo_name, 'test',log_file)
     writer = SummaryWriter(log_path)
     writer.add_text("args", str(args))
     logger = Logger(writer=writer,log_path=log_path)

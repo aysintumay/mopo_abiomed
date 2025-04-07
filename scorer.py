@@ -58,7 +58,7 @@ COLORS = (
 )
 
 
-def convert_tfenvents_to_csv(root_dir, xlabel, ylabel):
+def convert_tfenvents_to_csv(root_dir, xlabel, ylabel, ylabel2):
     """Recursively convert test/metric from all tfevent file under root_dir to csv."""
     tfevent_files = []
     for dirname, _, files in os.walk(root_dir):
@@ -74,7 +74,7 @@ def convert_tfenvents_to_csv(root_dir, xlabel, ylabel):
             output_file = os.path.join(os.path.split(tfevent_file)[0], ylabel+'.csv')
             ea = event_accumulator.EventAccumulator(tfevent_file)
             ea.Reload()
-            content = [[xlabel, ylabel]]
+            content = [[xlabel, ylabel, ylabel2]]
             for test_rew in ea.scalars.Items('eval/'+ylabel):
                 content.append(
                     [
@@ -82,23 +82,29 @@ def convert_tfenvents_to_csv(root_dir, xlabel, ylabel):
                         round(test_rew.value, 4),
                     ]
                 )
+            # csv.writer(open(output_file, 'w')).writerows(content)
+            
+
+            for test_rew in ea.scalars.Items(ylabel2):
+                content[1].extend([round(test_rew.value, 4)])
             csv.writer(open(output_file, 'w')).writerows(content)
             result[output_file] = content
     return result
 
 
-def merge_csv(csv_files, root_dir, xlabel, ylabel):
+def merge_csv(csv_files, root_dir, xlabel, ylabel, ylabel2):
     """Merge result in csv_files into a single csv file."""
     assert len(csv_files) > 0
     sorted_keys = sorted(csv_files.keys())
     sorted_values = [csv_files[k][1:] for k in sorted_keys]
     content = [
-        [xlabel, ylabel+'_mean', ylabel+'_std']
+        [xlabel, ylabel+'_mean', ylabel+'_std', ylabel+'_2_mean', ylabel+'_2_std']
     ]
     for rows in zip(*sorted_values):
         array = np.array(rows)
         assert len(set(array[:, 0])) == 1, (set(array[:, 0]), array[:, 0])
-        line = [rows[0][0], round(array[:, 1].mean(), 4), round(array[:, 1].std(), 4)]
+        line = [rows[0][0], round(array[:, 1].mean(), 4), round(array[:, 1].std(), 4), 
+               round(array[:, 2].mean(), 4), round(array[:, 2].std(), 4)]
         content.append(line)
     output_path = os.path.join(root_dir, ylabel+".csv")
     print(f"Output merged csv file to {output_path} with {len(content[1:])} lines.")
@@ -144,7 +150,7 @@ if __name__ == '__main__':
          default='log', help='root dir'
     )
     parser.add_argument(
-        '--task', default='abiomed_plot', help='task'
+        '--task', default='halfcheetah-medium-v2', help='task'
     )
     parser.add_argument(
         '--algos', default=["mopo"], help='algos'
@@ -158,30 +164,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--ylabel', default='episode_reward', help='matplotlib figure ylabel'
     )
+
     parser.add_argument(
-        '--smooth', type=int, default=10, help='smooth radius of y axis (default: 0)'
+        '--ylabel2', default='normalized_episode_reward', help='matplotlib figure ylabel'
     )
-    parser.add_argument(
-        '--colors', default=None, help='colors for different algorithms'
-    )
-    parser.add_argument('--show', action='store_true', help='show figure')
-    parser.add_argument(
-        '--output-path', type=str, help='figure save path', default="./figure.png"
-    )
-    parser.add_argument(
-        '--dpi', type=int, default=200, help='figure dpi (default: 200)'
-    )
+
     args = parser.parse_args()
 
-    args.task = 'halfcheetah-expert-v2'
     for algo in args.algos:
-        path = os.path.join(args.root_dir, args.task, algo)
-        result = convert_tfenvents_to_csv(path, args.xlabel, args.ylabel)
-        merge_csv(result, path, args.xlabel, args.ylabel)
+        path = os.path.join(args.root_dir, args.task, algo, 'test')
+        result = convert_tfenvents_to_csv(path, args.xlabel, args.ylabel,args.ylabel2 )
+        merge_csv(result, path, args.xlabel, args.ylabel, args.ylabel2)
 
-    # plt.style.use('seaborn')
-    plot_figure(root_dir=args.root_dir, task=args.task, algo_list=args.algos, x_label=args.xlabel, y_label=args.ylabel, title=args.title, smooth_radius=args.smooth, color_list=args.colors)
-    if args.output_path:
-        plt.savefig(args.output_path, dpi=args.dpi, bbox_inches='tight')
-    if args.show:
-        plt.show()
+    
