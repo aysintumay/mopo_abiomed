@@ -14,6 +14,7 @@ import sys
 import argparse
 import logging
 
+from common import util, functional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -34,15 +35,21 @@ class WorldTransformer:
                                                 encoder_dropout = self.args.encoder_dropout, 
                                                 decoder_dropout = self.args.decoder_dropout, 
                                                 device=self.device)
-        self.train_loader = self.read_data('train')
-        self.test_loader = self.read_data(mode = 'test') 
+        # self.train_loader = self.read_data('train')
+        # self.test_loader = self.read_data(mode = 'test') 
+        self.model_save_dir = util.logger_model.log_path
+        if args.data_name == 'train':   
+            self.train_loader = self.read_data('train')
+        else:
+            self.test_loader = self.read_data('test')
         if pretrained:
             self.trained_model = self.load_model()
             print('loaded model')
         else:
             self.trained_model = self.train_model()
             print('trained model')
-
+        self.rwd_mean = None
+        self.rwd_std = None
 
     def train_model(self):
 
@@ -67,21 +74,24 @@ class WorldTransformer:
             avg_loss = total_loss / len(self.train_loader)
             print(f'Epoch {epoch+1}, Loss: {avg_loss:.4f}')
             train_losses.append(avg_loss)
+
         
-        torch.save(self.model.state_dict(),  os.path.join(self.logger.writer.get_logdir(), f"checkpoint_epoch_{self.args.nepochs}.pth"))
+        if not os.path.exists(self.model_save_dir):
+            os.makedirs(self.model_save_dir)
+        torch.save(self.model.state_dict(),  os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.args.nepochs}.pth"))
         self.logger.print("World model total time: {:.3f}s".format(time.time() - start_time))
         return self.model
 
 
     def read_data(self, mode='train'):
 
-        if mode == 'train':
-            dta = torch.load(os.path.join(self.path, 'pp_train_amicgs.pt')).numpy()
-            dta = dta[: ,:, :-1]
-            self.rwd_mean = dta.mean(axis=(0, 1))
-            self.rwd_std = dta.std(axis=(0, 1))
-            horizon = int(self.args.output_dim/12-1)
-        else:
+        # if mode == 'train':
+        dta = torch.load(os.path.join(self.path, 'pp_train_amicgs.pt')).numpy()
+        dta = dta[: ,:, :-1]
+        self.rwd_mean = dta.mean(axis=(0, 1))
+        self.rwd_std = dta.std(axis=(0, 1))
+        horizon = int(self.args.output_dim/12-1)
+        if mode == 'test':
             dta = torch.load(os.path.join(self.path, 'pp_test_amicgs.pt')).numpy()
             dta = dta[: ,:, :-1]
             horizon = 90
@@ -106,9 +116,9 @@ class WorldTransformer:
     
     def load_model(self):
         # Load the model state dict
-   
+    
         # self.model.load_state_dict(torch.load(os.path.join(self.logger.writer.get_logdir(), f"checkpoint_epoch_{self.args.epoch}.pth")))
-        self.model.load_state_dict(torch.load(os.path.join('/home/ubuntu/mopo/log/Abiomed-v0/mopo/seed_1_0324_203947-Abiomed_v0_mopo', f"checkpoint_epoch_{self.args.nepochs}.pth")))
+        self.model.load_state_dict(torch.load(os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.args.nepochs}.pth")))
         return self.model.to(self.device)
     
     def predict(self, obs_loader):

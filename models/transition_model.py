@@ -15,6 +15,7 @@ class TransitionModel:
                  static_fns,
                  lr,
                  holdout_ratio=0.1,
+                 reward_penalty_coef = 1,
                  inc_var_loss=False,
                  use_weight_decay=False,
                  **kwargs):
@@ -26,6 +27,7 @@ class TransitionModel:
         self.model = EnsembleModel(obs_dim=obs_dim, action_dim=action_dim, device=util.device, **kwargs['model'])
         self.static_fns = static_fns
         self.lr = lr
+        self.reward_penalty_coef = reward_penalty_coef
 
         self.model_optimizer = torch.optim.Adam(self.model.parameters(), self.lr)
         self.networks = {
@@ -168,7 +170,7 @@ class TransitionModel:
         terminals = self.static_fns.termination_fn(obs, act, next_obs)
 
         # penalty rewards
-        penalty_coeff = 1
+        penalty_coeff = self.reward_penalty_coef
         penalty_learned_var = True
         if penalty_coeff != 0:
             if not penalty_learned_var:
@@ -222,10 +224,9 @@ class TransitionModel:
         self.model.load_state_dicts(self.model_best_snapshots)
 
     def save_model(self, info='dynamics_model'):
-        save_dir = os.path.join(util.logger.log_path, 'models')
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        model_save_dir = os.path.join(save_dir, "ite_{}".format(info))
+        model_save_dir = os.path.join(util.logger_model.log_path, info)
+        if not os.path.exists(model_save_dir):
+            os.makedirs(model_save_dir)
         if not os.path.exists(model_save_dir):
             os.makedirs(model_save_dir)
         for network_name, network in self.networks.items():
@@ -233,14 +234,12 @@ class TransitionModel:
             # Save the state_dict instead of the full model
             torch.save(network.state_dict(), save_path)
 
-            
-
 
     def load_model(self, info):
-        util.logger.log_path = '/home/ubuntu/mopo/log/Abiomed-v0/mopo/seed_5_0331_161040-Abiomed_v0_mopo'
-        util.logger.log_path = '/home/ubuntu/mopo/log/halfcheetah-medium-replay-v0/mopo/seed_5_0403_215901-halfcheetah_medium_replay_v0_mopo'
-        save_dir = os.path.join(util.logger.log_path, 'models')
-        model_save_dir = os.path.join(save_dir, "ite_{}".format(info))
+        # util.logger.log_path = '/home/ubuntu/mopo/log/Abiomed-v0/mopo/seed_5_0331_161040-Abiomed_v0_mopo'
+        # util.logger.log_path = '/home/ubuntu/mopo/log/halfcheetah-medium-replay-v0/mopo/seed_5_0403_215901-halfcheetah_medium_replay_v0_mopo'
+        # model_save_dir = os.path.join(util.logger_model.log_path, info)
+        model_save_dir = 'saved_models/Abiomed-v0/mopo/seed_1_0410_045638-Abiomed_v0_mopo'
         for network_name, network in self.networks.items():
             load_path = os.path.join(model_save_dir, network_name + ".pt")
             state_dict = torch.load(load_path, map_location='cuda')
