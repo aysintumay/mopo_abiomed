@@ -133,9 +133,9 @@ def train(run, logger, args=get_args()):
     critic2_optim = torch.optim.Adam(critic2.parameters(), lr=args.critic_lr)
 
     if args.auto_alpha:
-        target_entropy = args.target_entropy if args.target_entropy \
-            else -np.prod(env.action_space.shape)
-
+        # target_entropy = args.target_entropy if args.target_entropy \
+        #     else -np.prod(env.action_space.shape)
+        target_entropy = -np.prod(env.action_space.shape)
         args.target_entropy = target_entropy
 
         log_alpha = torch.zeros(1, requires_grad=True, device=args.device)

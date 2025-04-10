@@ -54,9 +54,9 @@ def get_args():
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1) #1000
-    parser.add_argument("--step-per-epoch", type=int, default=1) #1000
-    parser.add_argument("--eval_episodes", type=int, default=1)
+    parser.add_argument("--epoch", type=int, default=100) #1000
+    parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
+    parser.add_argument("--eval_episodes", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--log-freq", type=int, default=1000)
@@ -69,7 +69,7 @@ def get_args():
                         help='Specify the sequence dimension.')
     parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
                         help='Specify the batch size.')
-    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=1,
+    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
                         help='Specify the number of epochs to train for.')
     parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
                 help='Set the number of encoder layers.') 
