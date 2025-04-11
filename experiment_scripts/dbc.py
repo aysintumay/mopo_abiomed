@@ -57,17 +57,6 @@ class DeterministicBehaviorCloning:
         self.obs_dim = self.env.observation_space.shape[0]
         self.action_dim = np.prod(self.env.action_space.shape)
         
-        # Compute action statistics for normalization
-        self.action_mean = torch.FloatTensor(self.dataset["actions"].mean(axis=0)).to(self.device)
-        self.action_std = torch.FloatTensor(self.dataset["actions"].std(axis=0)).to(self.device)
-        self.action_std = torch.clamp(self.action_std, min=1e-3)  # Avoid division by zero
-        
-        # Scale actions to [-1, 1] range
-        action_min = torch.FloatTensor(self.env.action_space.low).to(self.device)
-        action_max = torch.FloatTensor(self.env.action_space.high).to(self.device)
-        self.action_scale = (action_max - action_min) / 2.0
-        self.action_bias = (action_max + action_min) / 2.0
-        
         # Use MLP with tanh activation for bounded actions
         self.model = MLP(
             input_dim=self.obs_dim,
@@ -79,11 +68,9 @@ class DeterministicBehaviorCloning:
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
         self.criterion = nn.MSELoss()
         
-        # Create data tensors and normalize actions
+        # Create data tensors
         self.obs = torch.FloatTensor(self.dataset["observations"]).to(self.device)
         self.actions = torch.FloatTensor(self.dataset["actions"]).to(self.device)
-        # Scale actions to [-1, 1] range
-        self.actions = (self.actions - self.action_bias) / self.action_scale
         
     def train(self):
         n_samples = len(self.obs)
@@ -127,8 +114,6 @@ class DeterministicBehaviorCloning:
                 with torch.no_grad():
                     obs_tensor = torch.FloatTensor(obs).unsqueeze(0).to(self.device)
                     action = self.model(obs_tensor)
-                    # Scale action back to environment's range
-                    action = action * self.action_scale + self.action_bias
                     action = action.cpu().numpy()[0]
                     # Clip action to ensure it's within bounds
                     action = np.clip(action, self.env.action_space.low, self.env.action_space.high)
