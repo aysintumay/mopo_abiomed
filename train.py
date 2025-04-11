@@ -95,11 +95,11 @@ def train(run, logger, args=get_args()):
         entry_point='abiomed_env:AbiomedEnv',  
         max_episode_steps = 1000,
         )
-        env = gym.make(args.task, args = args, logger = logger, data_name = "train", pretrained = args.pretrained)
-        dataset = d4rl.qlearning_dataset(env)
+        kwargs = {"args": args, "logger": logger, "data_name": "train"}
+        env = gym.make(args.task, **kwargs)
     else:
         env = gym.make(args.task)
-        dataset = d4rl.qlearning_dataset(env)
+    dataset = d4rl.qlearning_dataset(env)
     args.obs_shape = env.observation_space.shape
     args.action_dim = np.prod(env.action_space.shape)
     
@@ -228,6 +228,11 @@ def train(run, logger, args=get_args()):
     # begin train
     trainer.train_policy()
 
+    return  {
+        'rwd_stds': env.rwd_stds,
+        'rwd_means': env.rwd_means, 
+        'scaler': env.scaler
+        }
 
 if __name__ == "__main__":
 

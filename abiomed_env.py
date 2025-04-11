@@ -4,38 +4,28 @@ import numpy as np
 import torch
 from world_transformer import WorldTransformer
 from tqdm import tqdm
+from sklearn.preprocessing import MinMaxScaler
 
 class AbiomedEnv(gym.Env):
-    def __init__(self, args, logger,data_name, pretrained =True):
+    def __init__(self, args, logger, data_name, scaler_info=None):
         super(AbiomedEnv, self).__init__()
         # Replace obs_dim and action_dim with actual dimensions
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(12*90,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
-        self.pretrained = pretrained
         self.logger = logger
+        self.id = 'Abiomed-v0'
         self.args = args
         self.data_name = data_name
-        self.world_model = WorldTransformer(args = self.args, logger = self.logger, pretrained = self.pretrained)
+        self.world_model = WorldTransformer(args = self.args, logger = self.logger, pretrained = self.args.pretrained)
         # self.trained_world_model = self.world_model.load_model()
         self.data = self.load_data()
         self.current_index = 0
-        self.rwd_means = []
-        self.rwd_stds = []
+        self.rwd_means = scaler_info['rwd_means'] if scaler_info else []
+        self.rwd_stds = scaler_info['rwd_stds'] if scaler_info else []
+        self.scaler = scaler_info['scaler'] if scaler_info else None
 
     def load_data(self):
         # Implement your data loading logic here.
-
-        #change to the formal path later
-        train = torch.load(f"/data/abiomed_tmp/processed/pp_{self.data_name}_amicgs.pt").numpy()
-        # test = torch.load(f"/data/abiomed_tmp/processed/pp_test_amicgs.pt").numpy()
-
-        #dont take ID column
-        train = train[: ,:, :-1]
-        # test = test[: ,:, :-1]
-        self.rwd_means = train.mean(axis=(0, 1))
-        self.rwd_stds = train.std(axis=(0, 1))
-
-        # test = (test - rwd_means) / rwd_stds
 
         def generate_buffer(data, length=90):
 
@@ -57,7 +47,9 @@ class AbiomedEnv(gym.Env):
                 row = norm_data[i]
                 unnorm_row = data[i]
                 reward = self.compute_reward(unnorm_row[90:, :12])
-                reward = reward/31
+
+                #proper reward normalization
+                # reward = reward/31
                 state = row[:90, :12].flatten()
                 next_state = row[90:, :12].flatten()
 
@@ -76,19 +68,42 @@ class AbiomedEnv(gym.Env):
                 done_l.append(done)
                 full_action_l.append(all_action)  # Store the full action for analysis
 
+            normalized_rewards = self.normalize_reward(reward_l)
                     
             return {
                     'observations': np.array(obs),
                     'actions': np.array(action_l).reshape(-1, 1),  # Reshape to ensure it's 2D
-                    'rewards': np.array(reward_l),
+                    'rewards': np.array(normalized_rewards),
                     'terminals': np.array(done_l),
                     'next_observations': np.array(next_obs),
                     'full_actions': np.array(full_action_l)  # Store the full action for analysis
                     }
     
-        train_dict = generate_buffer(train)
-        # test_dict = generate_buffer(test)
+        train = torch.load(f"/data/abiomed_tmp/processed/pp_{self.data_name}_amicgs.pt").numpy()
+            
+        if self.data_name == 'train':
+                #dont take ID column
+            train = train[: ,:, :-1]
+            self.rwd_means = train.mean(axis=(0, 1))
+            self.rwd_stds = train.std(axis=(0, 1))
+            train_dict = generate_buffer(train)
+            
+        else:
+            train_dict = generate_buffer(train)
+
         return train_dict
+    
+
+    def normalize_reward(self, rewards):
+        if self.scaler:
+            rewards = self.scaler.transform(rewards)
+        else:
+            scaler = MinMaxScaler()
+            rewards = rewards.reshape(-1, 1)
+            scaler.fit(rewards)
+            normalized_rewards = scaler.transform(rewards)
+            self.scaler = scaler
+        return normalized_rewards
     
     def get_dataset(self):
 

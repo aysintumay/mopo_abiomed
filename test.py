@@ -134,7 +134,7 @@ def get_eval(policy, env, logger, trainer, args,):
     #     logger.record("avg episode_1_off_accuracy", np.array(off_acc).mean(), args.eval_episodes, printed=False)
 
 
-def test(run, logger, model_logger, args=get_args()):
+def test(run, logger, model_logger, norm_info, args=get_args()):
 
 
     # create env and dataset
@@ -144,11 +144,11 @@ def test(run, logger, model_logger, args=get_args()):
         entry_point='abiomed_env:AbiomedEnv',  
         max_episode_steps = 1000,
         )
-        env = gym.make(args.task, args = args, logger = logger, data_name = "train", pretrained = True)
-        dataset = d4rl.qlearning_dataset(env)
+        kwargs = {"args": args, "logger": logger, "data_name": "test", 'scaler_info': norm_info}
+        env = gym.make(args.task, **kwargs)
     else:
         env = gym.make(args.task)
-        dataset = d4rl.qlearning_dataset(env)
+    dataset = d4rl.qlearning_dataset(env)
     args.obs_shape = env.observation_space.shape
     args.action_dim = np.prod(env.action_space.shape)
     

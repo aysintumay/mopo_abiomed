@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument("--pretrained", type=bool, default=True)
     parser.add_argument("--mode", type=str, default="offline")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
-    parser.add_argument("--policy_path" , type=str, default="log/Abiomed-v0/mopo/seed_5_0331_215447-Abiomed_v0_mopo/policy.pth")
+    parser.add_argument("--policy_path" , type=str, default="")
     parser.add_argument("--model_path" , type=str, default="saved_models")
 
     parser.add_argument("--task", type=str, default="Abiomed-v0")
@@ -145,10 +145,10 @@ def main(args):
     args.model_path = model_path
     args.pretrained = False
     args.data_name = 'train'     #to be fast 
-    train(run, logger, args)
+    scaler_info = train(run, logger, args)
 
     args.data_name = 'test'
-    test(run, logger, model_logger, args)
+    test(run, logger, model_logger, scaler_info, args)
 
 
 
