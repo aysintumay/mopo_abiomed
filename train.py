@@ -232,7 +232,7 @@ def train(run, logger, args=get_args()):
         'rwd_stds': env.rwd_stds,
         'rwd_means': env.rwd_means, 
         'scaler': env.scaler
-        }
+        } if args.task == "Abiomed-v0" else None
 
 if __name__ == "__main__":
 
