@@ -8,7 +8,7 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 
 - MuJoCo 2.0
 - Gym 0.22.0
-- D4RL
+- d4rl
 - PyTorch 1.8+
 
 # Usage
