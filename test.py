@@ -83,115 +83,24 @@ def get_args():
                         help='Specify the path to read data.')
     return parser.parse_args()
 
-def _evaluate(policy, eval_env, episodes):
-        policy.eval()
-        obs = eval_env.reset()
-        eval_ep_info_buffer = []
-        num_episodes = 0
-        episode_reward, episode_length = 0, 0
-
-        while num_episodes < episodes:
-            action = policy.sample_action(obs, deterministic=True)
-            next_obs, reward, terminal, _ = eval_env.step(action)
-            episode_reward += reward
-            episode_length += 1
-
-            obs = next_obs
-
-            if terminal:
-                eval_ep_info_buffer.append(
-                    {"episode_reward": episode_reward, "episode_length": episode_length}
-                )
-                
-
-                #d4rl don't have REF_MIN_SCORE and REF_MAX_SCORE for v2 environments
-                dset_name = eval_env.unwrapped.spec.name+'-v0'
-                print(d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100)
-
-                num_episodes +=1
-                episode_reward, episode_length = 0, 0
-                obs = eval_env.reset()
-
-        return {
-            "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
-            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
-        }
-
-
-def evaluate(policy, env, trainer, episodes=500, step_per_epoch = 1000):  
-    policy.eval()
-    obs = env.reset()
-    
-    eval_ep_info_buffer = []
-    num_episodes = 0
-    episode_reward, episode_length = 0, 0
-    acc_total = 0
-    acc_1_off_total = 0
-    terminal_counter = 0
-    while num_episodes <= episodes:
-        act = env.get_pl()
-        if num_episodes % 2 == 0:
-            next_state_gt = env.get_next_obs() #next state gt
-        else:
-            next_state_gt = env.get_obs()
-        action = policy.sample_action(obs, deterministic=True)
-        action = action.repeat(90) #repeat the action for 90 steps
-
-        full_pl = env.get_full_pl()
-        next_obs, reward, terminal, _ = env.step(action) #next state predictions
-        # print(f'reward func rew:{reward}')
-        #obs: (0,90) next_state_gt:(90,180) next_obs: (90,180), action: (90,180) act: (90,180)
-        
-        episode_reward += reward
-        episode_length += 1
-
-        terminal_counter += 1
-        acc, acc_1_off = trainer.eval_bcq(action, full_pl)
-        acc_total += acc
-        acc_1_off_total += acc_1_off
-
-        obs = next_obs.reshape(1,-1)
-
-        if terminal_counter == step_per_epoch:
-
-            trainer.plot_predictions_rl(obs.reshape(1,90,12), next_state_gt.reshape(1,90,12), next_obs.reshape(1,90,12), action.reshape(1,90), full_pl.reshape(1,90), num_episodes)
-            eval_ep_info_buffer.append(
-                {"episode_reward": episode_reward,
-                    "episode_length": episode_length,
-                    "episode_accurcy": acc_total/step_per_epoch, 
-                    "episode_1_off_accuracy": acc_1_off_total/step_per_epoch}
-            )
-            terminal_counter = 0
-            episode_reward, episode_length = 0, 0
-            acc_total, acc_1_off_total = 0, 0
-            obs = env.reset()
-            num_episodes +=1
-
-            print("episode_reward", episode_reward, 
-                  "episode_length", episode_length,
-                  "episode_accuracy", acc_total/step_per_epoch, 
-                  "episode_1_off_accuracy", acc_1_off_total/step_per_epoch)
-
-    return {
-            "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
-            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer],
-            "eval/episode_accuracy": [ep_info["episode_accurcy"] for ep_info in eval_ep_info_buffer],
-            "eval/episode_1_off_accuracy": [ep_info["episode_1_off_accuracy"] for ep_info in eval_ep_info_buffer],
-        },
-
 
 def get_eval(policy, env, logger, trainer, args,):
+
     reward_l, acc_l, off_acc = [], [], []
     reward_std_l, acc_std_l, off_acc_std = [], [], []
+
+    trainer.eval_env = env
+    trainer.algo.policy = policy
+
     if args.task == 'Abiomed-v0':
-        eval_info = evaluate(policy, env, trainer, episodes=args.eval_episodes, step_per_epoch = args.step_per_epoch)
+        eval_info = trainer.evaluate()
     else:
-        eval_info = _evaluate(policy, env, args.eval_episodes)
+        eval_info = trainer._evaluate()
     ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
     ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
     if args.task == 'Abiomed-v0':
-        ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info[0]["eval/episode_accuracy"]), np.std(eval_info[0]["eval/episode_accuracy"])
-        ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info[0]["eval/episode_1_off_accuracy"]), np.std(eval_info[0]["eval/episode_1_off_accuracy"])
+        ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info["eval/episode_accuracy"]), np.std(eval_info["eval/episode_accuracy"])
+        ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info["eval/episode_1_off_accuracy"]), np.std(eval_info["eval/episode_1_off_accuracy"])
 
     if args.task == 'Abiomed-v0':
         logger.record("eval/episode_accuracy", ep_accuracy_mean, args.eval_episodes, printed=False)
@@ -220,38 +129,13 @@ def get_eval(policy, env, logger, trainer, args,):
     else:
         logger.record("episode_reward", ep_reward_mean/ep_length_mean, args.eval_episodes, printed=False)
 
-    if args.task == 'Abiomed-v0':
-        logger.record("avg episode_accuracy", np.array(acc_l).mean(), args.eval_episodes, printed=False)
-        logger.record("avg episode_1_off_accuracy", np.array(off_acc).mean(), args.eval_episodes, printed=False)
+    # if args.task == 'Abiomed-v0':
+    #     logger.record("avg episode_accuracy", np.array(acc_l).mean(), args.eval_episodes, printed=False)
+    #     logger.record("avg episode_1_off_accuracy", np.array(off_acc).mean(), args.eval_episodes, printed=False)
 
 
-def test(args=get_args()):
+def test(run, logger, model_logger, args=get_args()):
 
-    run = wandb.init(
-                project=args.task,
-                group=f"mopo",
-                config=vars(args),
-                # name=f"hpo_trial_{trial.number}", reinit=True
-                )
-    
-    # seed
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    if args.device != "cpu":
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-
-    # log
-    t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-    log_file = f'test_seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-    log_path = os.path.join(args.logdir, args.task, args.algo_name, 'test',log_file)
-    writer = SummaryWriter(log_path)
-    writer.add_text("args", str(args))
-    logger = Logger(writer=writer,log_path=log_path)
-
-    Devid = 0 if args.device == 'cuda' else -1
-    set_device_and_logger(Devid,logger)
 
     # create env and dataset
     if args.task == "Abiomed-v0":
@@ -345,6 +229,7 @@ def test(args=get_args()):
                                      action_space=env.action_space,
                                      static_fns=static_fns,
                                      lr=args.dynamics_lr,
+                                     reward_penalty_coef = args.reward_penalty_coef,
                                      **config["transition_params"]
                                      )    
     
@@ -376,7 +261,7 @@ def test(args=get_args()):
         
     )
     
-    policy_state_dict = torch.load(args.policy_path)
+    policy_state_dict = torch.load(os.path.join(model_logger.log_path, f'policy_{args.task}.pth'))
     sac_policy.load_state_dict(policy_state_dict)
 
     get_eval(sac_policy, env, logger, trainer, args)

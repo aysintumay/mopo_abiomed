@@ -1,0 +1,4 @@
+Epoch #1: episode_reward: -17.000 ± 0.000,                                   episode_length: 1.000 ± 0.000,                                   episode_accuracy: 0.000 ± 0.000,                                   episode_1_off_accuracy: 0.000 ± 0.000
+Epoch #1: episode_reward: -17.000 ± 0.000,                               episode_length: 1.000 ± 0.000
+total time: 153.757s
+episode_reward: -17.000 ± 0.000,                            episode_length: 1.000 ± 0.000,                            episode_accuracy: 0.000 ± 0.000,                            episode_1_off_accuracy: 0.000 ± 0.000

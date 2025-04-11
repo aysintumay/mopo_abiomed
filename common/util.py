@@ -9,7 +9,7 @@ import importlib
 
 device = None
 logger = None
-
+logger_model = None
 
 
 
@@ -20,8 +20,8 @@ def set_global_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def set_device_and_logger(gpu_id, logger_ent):
-    global device, logger
+def set_device_and_logger(gpu_id, logger_ent, logger_mod):
+    global device, logger, logger_model
     if gpu_id < 0 or torch.cuda.is_available() == False:
         device = torch.device("cpu")
     else:
@@ -29,6 +29,7 @@ def set_device_and_logger(gpu_id, logger_ent):
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
     print("setting device:", device)
     logger = logger_ent
+    logger_model = logger_mod
 
 
 def relative_path_to_module_path(relative_path):

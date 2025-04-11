@@ -13,50 +13,6 @@ import argparse
 
 from tensorboard.backend.event_processing import event_accumulator
 
-COLORS = (
-    [
-        # deepmind style
-        '#0072B2',
-        '#009E73',
-        '#D55E00',
-        '#CC79A7',
-        # '#F0E442',
-        '#d73027',  # RED
-        # built-in color
-        'blue',
-        'red',
-        'pink',
-        'cyan',
-        'magenta',
-        'yellow',
-        'black',
-        'purple',
-        'brown',
-        'orange',
-        'teal',
-        'lightblue',
-        'lime',
-        'lavender',
-        'turquoise',
-        'darkgreen',
-        'tan',
-        'salmon',
-        'gold',
-        'darkred',
-        'darkblue',
-        'green',
-        # personal color
-        '#313695',  # DARK BLUE
-        '#74add1',  # LIGHT BLUE
-        '#f46d43',  # ORANGE
-        '#4daf4a',  # GREEN
-        '#984ea3',  # PURPLE
-        '#f781bf',  # PINK
-        '#ffc832',  # YELLOW
-        '#000000',  # BLACK
-    ]
-)
-
 
 def convert_tfenvents_to_csv(root_dir, xlabel, ylabel, ylabel2):
     """Recursively convert test/metric from all tfevent file under root_dir to csv."""

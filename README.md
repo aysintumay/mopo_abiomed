@@ -13,6 +13,13 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 
 # Usage
 
+
+Abiomed Implementation:
+
+```
+python mopo.py --task Abiomed-v0 --reward-penalty-coef 1e-3 --model_path 'saved_models"
+```
+
 ## Train
 
 ```

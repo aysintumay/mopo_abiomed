@@ -1,0 +1,70 @@
+World model total time: 16.638s
+Start training dynamics
+loss/model_eval_mse_loss: 0.093826
+loss/model_eval_mse_loss: 0.092883
+loss/model_eval_mse_loss: 0.092165
+loss/model_eval_mse_loss: 0.090658
+loss/model_eval_mse_loss: 0.090387
+loss/model_eval_mse_loss: 0.089161
+loss/model_eval_mse_loss: 0.088085
+loss/model_eval_mse_loss: 0.088035
+loss/model_eval_mse_loss: 0.089052
+loss/model_eval_mse_loss: 0.087405
+loss/model_eval_mse_loss: 0.088578
+loss/model_eval_mse_loss: 0.086305
+loss/model_eval_mse_loss: 0.086345
+loss/model_eval_mse_loss: 0.087157
+loss/model_eval_mse_loss: 0.085848
+loss/model_eval_mse_loss: 0.085611
+loss/model_eval_mse_loss: 0.085977
+loss/model_eval_mse_loss: 0.085675
+loss/model_eval_mse_loss: 0.084950
+loss/model_eval_mse_loss: 0.084746
+loss/model_eval_mse_loss: 0.084630
+loss/model_eval_mse_loss: 0.083477
+loss/model_eval_mse_loss: 0.083487
+loss/model_eval_mse_loss: 0.083326
+loss/model_eval_mse_loss: 0.082777
+loss/model_eval_mse_loss: 0.082912
+loss/model_eval_mse_loss: 0.082413
+loss/model_eval_mse_loss: 0.081804
+loss/model_eval_mse_loss: 0.081645
+loss/model_eval_mse_loss: 0.081018
+loss/model_eval_mse_loss: 0.080568
+loss/model_eval_mse_loss: 0.079640
+loss/model_eval_mse_loss: 0.078836
+loss/model_eval_mse_loss: 0.078440
+loss/model_eval_mse_loss: 0.077757
+loss/model_eval_mse_loss: 0.077090
+loss/model_eval_mse_loss: 0.075804
+loss/model_eval_mse_loss: 0.076402
+loss/model_eval_mse_loss: 0.075420
+loss/model_eval_mse_loss: 0.073725
+loss/model_eval_mse_loss: 0.073534
+loss/model_eval_mse_loss: 0.072535
+loss/model_eval_mse_loss: 0.072256
+loss/model_eval_mse_loss: 0.071651
+loss/model_eval_mse_loss: 0.070287
+loss/model_eval_mse_loss: 0.071563
+loss/model_eval_mse_loss: 0.070736
+loss/model_eval_mse_loss: 0.068857
+loss/model_eval_mse_loss: 0.070521
+loss/model_eval_mse_loss: 0.068490
+loss/model_eval_mse_loss: 0.068571
+loss/model_eval_mse_loss: 0.068254
+loss/model_eval_mse_loss: 0.067519
+loss/model_eval_mse_loss: 0.067262
+loss/model_eval_mse_loss: 0.067129
+loss/model_eval_mse_loss: 0.067955
+loss/model_eval_mse_loss: 0.067679
+loss/model_eval_mse_loss: 0.068224
+loss/model_eval_mse_loss: 0.067646
+loss/model_eval_mse_loss: 0.068431
+loss/model_eval_mse_loss: 0.070097
+loss/model_eval_mse_loss: 0.070717
+loss/model_eval_mse_loss: 0.070327
+loss/model_eval_mse_loss: 0.074040
+total time: 412.909s
+Epoch #1: episode_reward: -17.000 ± 0.000,                                   episode_length: 1.000 ± 0.000,                                   episode_accuracy: 0.000 ± 0.000,                                   episode_1_off_accuracy: 0.000 ± 0.000
+Epoch #1: episode_reward: -17.000 ± 0.000,                               episode_length: 1.000 ± 0.000
+total time: 132.838s

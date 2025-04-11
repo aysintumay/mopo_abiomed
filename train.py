@@ -85,35 +85,7 @@ def get_args():
     return parser.parse_args()
 
 
-def train(args=get_args()):
-
-    
-    run = wandb.init(
-                project=args.task,
-                group=f"mopo",
-                config=vars(args),
-                # name=f"hpo_trial_{trial.number}", reinit=True
-                )
-    
-    # seed
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    if args.device != "cpu":
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-
-    # log
-    t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-    log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
-    writer = SummaryWriter(log_path)
-    writer.add_text("args", str(args))
-    logger = Logger(writer=writer,log_path=log_path)
-
-    Devid = 0 if args.device == 'cuda' else -1
-    set_device_and_logger(Devid,logger)
-
+def train(run, logger, args=get_args()):
 
     # create env and dataset
 
@@ -161,9 +133,9 @@ def train(args=get_args()):
     critic2_optim = torch.optim.Adam(critic2.parameters(), lr=args.critic_lr)
 
     if args.auto_alpha:
-        target_entropy = args.target_entropy if args.target_entropy \
-            else -np.prod(env.action_space.shape)
-
+        # target_entropy = args.target_entropy if args.target_entropy \
+        #     else -np.prod(env.action_space.shape)
+        target_entropy = -np.prod(env.action_space.shape)
         args.target_entropy = target_entropy
 
         log_alpha = torch.zeros(1, requires_grad=True, device=args.device)
@@ -191,6 +163,7 @@ def train(args=get_args()):
                                      action_space=env.action_space,
                                      static_fns=static_fns,
                                      lr=args.dynamics_lr,
+                                     reward_penalty_coef = args.reward_penalty_coef,
                                      **config["transition_params"]
                                      )    
       
@@ -228,7 +201,7 @@ def train(args=get_args()):
     )
     #load world model
 
-    dynamics_model.load_model(f'dynamics_model') 
+    # dynamics_model.load_model(f'dynamics_model') 
 
    
     # create trainer
@@ -248,7 +221,7 @@ def train(args=get_args()):
     )
 
     # pretrain dynamics model on the whole dataset
-    # trainer.train_dynamics()
+    trainer.train_dynamics()
     #  
 
     

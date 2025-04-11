@@ -9,7 +9,7 @@ class AbiomedEnv(gym.Env):
     def __init__(self, args, logger,data_name, pretrained =True):
         super(AbiomedEnv, self).__init__()
         # Replace obs_dim and action_dim with actual dimensions
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(12*90,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(12*90,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
         self.pretrained = pretrained
         self.logger = logger
@@ -211,6 +211,38 @@ class AbiomedEnv(gym.Env):
        
         
         return -score
+    
+
+    def compute_reward_smooth(data, map_dim=0, pulsat_dim=6, hr_dim=7, lvedp_dim=3):
+        '''
+        Differentiable version of the reward function using PyTorch
+        '''
+        score = torch.tensor(0.0, device=data.device)
+        relu = torch.nn.ReLU()
+        # MAP component
+        map_data = data[..., map_dim]
+
+        # MinMAP range component
+        minMAP = torch.min(map_data)
+        score += relu(7 * (60 - minMAP) / 20) #relu(7 * (60 - minMAP) / 20)  # Linear score from 0 at MAP=60 to 7 at MAP=40 and below
+        
+        # # Time MAP < 60 component
+        # time_below_60 = torch.mean(smooth_threshold(-map_data, -60)) * 100
+        # score += relu(7/5 * time_below_60)
+
+        # Heart Rate component
+        hr = torch.min(data[..., hr_dim])
+        # Polynomial penalty for heart rate outside 50-100 range
+        hr_penalty = 3 * (hr - 75)**2 / 625 # Quadratic penalty centered at hr=75, max penalty at hr=50 or 100
+        score += hr_penalty
+        
+        # Pulsatility component
+        pulsat = torch.min(data[..., pulsat_dim])
+        pulsat_penalty = 7 * (20 - pulsat) / 20
+        score += pulsat_penalty
+    
+        return -score
+    
 
     def check_terminal_condition(self):
         # Define when an episode should end

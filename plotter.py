@@ -173,7 +173,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    args.task = 'halfcheetah-expert-v2'
+    # args.task = 'halfcheetah-expert-v2'
     for algo in args.algos:
         path = os.path.join(args.root_dir, args.task, algo)
         result = convert_tfenvents_to_csv(path, args.xlabel, args.ylabel)
