@@ -9,16 +9,14 @@ import pandas as pd
 from datetime import datetime
 import gym
 import d4rl
-from torch.utils.tensorboard import SummaryWriter
+
 # add parent directory to path
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.policy_models import MLP, ActorProb, DiagGaussian
-from common.logger import Logger
-from common.util import set_device_and_logger
+from models.policy_models import MLP, DiagGaussian, BasicActor
 
-# run command: 
-# python experiment_scripts/bc.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BC --epochs 100 --device_id 5
+# run command in the mopo_abiomed directory: 
+# python algo/bc.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BC --epochs 25 --device_id 5
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -29,15 +27,14 @@ def get_args():
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--logdir", type=str, default="log")
+    parser.add_argument("--logdir", type=str, default="results")
     parser.add_argument("--pretrained", type=bool, default=True)
     parser.add_argument("--device_id", type=int, default=0)
     return parser.parse_args()
 
 class BehaviorCloning:
-    def __init__(self, args, logger):
+    def __init__(self, args, seed=0):
         self.args = args
-        self.logger = logger
         self.device = torch.device(f"cuda:{args.device_id}" if args.device == "cuda" else "cpu")
         
         # Create environment and get dataset
@@ -47,15 +44,17 @@ class BehaviorCloning:
                 entry_point='abiomed_env:AbiomedEnv',
                 max_episode_steps=1000,
             )
-            self.env = gym.make(args.task, args=args, logger=logger, data_name="train", pretrained=args.pretrained)
+            self.env = gym.make(args.task, args=args, data_name="train", pretrained=args.pretrained)
         else:
             self.env = gym.make(args.task)
-            
+        
+        self.env.seed(seed)
         self.dataset = d4rl.qlearning_dataset(self.env)
         
         # Initialize model
         self.obs_dim = self.env.observation_space.shape[0]
         self.action_dim = np.prod(self.env.action_space.shape)
+
         
         actor_backbone = MLP(input_dim=self.obs_dim, hidden_dims=[256, 256])
         dist = DiagGaussian(
@@ -64,8 +63,8 @@ class BehaviorCloning:
             unbounded=True,
             conditioned_sigma=True
         )
-        self.model = ActorProb(actor_backbone, dist, self.device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
+        self.model = BasicActor(actor_backbone, dist, self.env.action_space, self.device)
+        self.optimizer = optim.Adam(self.model.actor.parameters(), lr=args.lr)
         
         # Create data tensors
         self.obs = torch.FloatTensor(self.dataset["observations"]).to(self.device)
@@ -73,8 +72,10 @@ class BehaviorCloning:
         
     def train(self):
         n_samples = len(self.obs)
+        print(f"Training on {n_samples} samples")
         n_batches = n_samples // self.args.batch_size
         prev_loss = np.inf
+        mse = nn.MSELoss()
 
         for epoch in range(self.args.epochs):
             total_loss = 0
@@ -86,8 +87,8 @@ class BehaviorCloning:
                 actions_batch = self.actions[batch_idx]
                 
                 self.optimizer.zero_grad()
-                dist = self.model.get_dist(obs_batch)
-                loss = -dist.log_prob(actions_batch).mean()
+                action, _ = self.model(obs_batch)
+                loss = mse(action, actions_batch)
                 loss.backward()
                 self.optimizer.step()
                 
@@ -96,38 +97,39 @@ class BehaviorCloning:
             avg_loss = total_loss / n_batches
             print(f"Epoch {epoch + 1}/{self.args.epochs}, Loss: {avg_loss:.4f}")
             # stop training if loss difference is less than 0.01
-            if i > 0 and abs(avg_loss - prev_loss) < 0.001:
+            if i > 0 and abs(avg_loss - prev_loss) < 0.0005:
                 print(f"Early stopping at epoch {epoch + 1}")
                 break
             prev_loss = avg_loss
 
-    def evaluate(self, n_episodes=10):
-        returns = []
-        for _ in range(n_episodes):
-            obs = self.env.reset()
-            done = False
-            total_reward = 0
-            
-            while not done:
-                with torch.no_grad():
-                    obs_tensor = torch.FloatTensor(obs).unsqueeze(0).to(self.device)
-                    dist = self.model.get_dist(obs_tensor)
-                    action = dist.sample()
-                    action = action.cpu().numpy()[0]
-                    # Clip action to ensure it's within bounds
-                    action = np.clip(action, self.env.action_space.low, self.env.action_space.high)
-                step_result = self.env.step(action)
-                # Handle both old (4 values) and new (5 values) gym step returns
-                if len(step_result) == 4:
-                    obs, reward, done, info = step_result
-                else:
-                    obs, reward, done, truncated, info = step_result
-                    done = done or truncated
-                total_reward += reward
-                
-            returns.append(total_reward)
-            
-        return np.mean(returns), np.std(returns)
+    def evaluate(self, eval_episodes=15):
+        self.model.eval()
+        obs = self.env.reset()
+        eval_ep_info_buffer = []
+        num_episodes = 0
+        episode_reward, episode_length = 0, 0
+
+        while num_episodes < eval_episodes:
+            action = self.model.sample_action(obs, deterministic=True)
+            next_obs, reward, terminal, _ = self.env.step(action)
+            episode_reward += reward
+            episode_length += 1
+
+            obs = next_obs
+
+            if terminal:
+                eval_ep_info_buffer.append(
+                    {"episode_reward": episode_reward, "episode_length": episode_length}
+                )
+                num_episodes +=1
+                episode_reward, episode_length = 0, 0
+                obs = self.env.reset()
+        
+        return {
+            "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
+            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
+        }
+    
     
     def save_model(self, path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -136,55 +138,61 @@ class BehaviorCloning:
     def load_model(self, path):
         self.model.load_state_dict(torch.load(path))
 
+
 def main():
     args = get_args()
-    results = []
+
+    t0 = datetime.now().strftime("%m%d_%H%M%S")
+
+    # Set device
+    if args.device_id < 0 or torch.cuda.is_available() == False:
+        device = torch.device("cpu")
+    else:
+        device = torch.device("cuda:{}".format(args.device_id))
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(args.device_id)
+    print("setting device:", device)
     
+    # Train and evaluate        
+    results = []
     for seed in args.seeds:
-        print(f"Running experiment with seed {seed}")
-        # Set seeds
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
-        if args.device != "cpu":
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
-            
-        # Setup logging
-        t0 = datetime.now().strftime("%m%d_%H%M%S")
-        log_file = f'bc_seed_{seed}_{t0}-{args.task.replace("-", "_")}'
-        log_path = os.path.join(args.logdir, args.task, "bc", log_file)
-        writer = SummaryWriter(log_path)
-        writer.add_text("args", str(args))
-        logger = Logger(writer=writer, log_path=log_path)
-        
-        # Set device
-        Devid = args.device_id if args.device == 'cuda' else -1
-        set_device_and_logger(Devid, logger)
-        
-        # Train and evaluate
-        bc = BehaviorCloning(args, logger)
-        bc.train()
-        
+        torch.cuda.manual_seed_all(seed)
+
+        bc = BehaviorCloning(args)
+        bc.train()        
         # Save model
-        model_path = os.path.join(args.model_dir, f"bc_{args.task}_seed_{seed}.pt")
+        model_path = os.path.join(args.model_dir, f"bc_{args.task}_{t0}_seed_{seed}.pt")
         bc.save_model(model_path)
-        
+    
+
         # Evaluate
-        mean_return, std_return = bc.evaluate()
+        eval_results = bc.evaluate()
+        mean_return = np.mean(eval_results["eval/episode_reward"])
+        std_return = np.std(eval_results["eval/episode_reward"])
+        mean_length = np.mean(eval_results["eval/episode_length"])
+        std_length = np.std(eval_results["eval/episode_length"])
         results.append({
             'seed': seed,
             'mean_return': mean_return,
-            'std_return': std_return
+            'std_return': std_return,
+            'mean_length': mean_length,
+            'std_length': std_length
         })
         
         print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
-    
+
     # Save results to CSV
+    os.makedirs(os.path.join(args.logdir, args.task, "bc"), exist_ok=True)
     results_df = pd.DataFrame(results)
     results_path = os.path.join(args.logdir, args.task, "bc", f"bc_results_{t0}.csv")
     results_df.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
+
+
+
+
 
 if __name__ == "__main__":
     main() 

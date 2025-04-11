@@ -101,3 +101,34 @@ class DiagGaussian(nn.Module):
             shape[1] = -1
             sigma = (self.sigma_param.view(shape) + torch.zeros_like(mu)).exp()
         return NormalWrapper(mu, sigma)
+    
+
+class BasicActor(nn.Module):
+    def __init__(self, backbone, dist_net, action_space, device="cpu"):
+        super().__init__()
+        self.backbone = backbone.to(device)
+        self.dist_net = dist_net.to(device)
+        self.action_space = action_space
+
+        self.__eps = np.finfo(np.float32).eps.item()
+
+        self.actor = ActorProb(self.backbone, self.dist_net, device)
+
+    def forward(self, obs, deterministic=False):
+        dist = self.actor.get_dist(obs)
+        if deterministic:
+            action = dist.mode()
+        else:
+            action = dist.rsample()
+        log_prob = dist.log_prob(action)
+
+        action_scale = torch.tensor((self.action_space.high - self.action_space.low) / 2, device=action.device)
+        squashed_action = torch.tanh(action)
+        log_prob = log_prob - torch.log(action_scale * (1 - squashed_action.pow(2)) + self.__eps).sum(-1, keepdim=True)
+
+        return squashed_action, log_prob
+
+    def sample_action(self, obs, deterministic=False):
+        action, _ = self(obs, deterministic)
+        return action.cpu().detach().numpy()
+    
