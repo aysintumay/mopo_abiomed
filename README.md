@@ -8,12 +8,35 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 
 - MuJoCo 2.0
 - Gym 0.22.0
-- D4RL
+- d4rl
 - PyTorch 1.8+
 
 # Usage
 
-## Train
+
+## Abiomed Implementation:
+
+```
+python mopo.py --task Abiomed-v0 --reward-penalty-coef 1e-3 --model_path 'saved_models"
+```
+
+## Baselines
+
+BC and BCQ implementations. We want to run for the following list of baselines:
+
+- halfcheetah-random-v0
+- halfcheetah-expert-v0
+- walker2d-random-v0
+- walker2d-expert-v0
+
+```
+python algo/bc.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BC --epochs 25 --device_id 5
+
+python algo/bcq.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BCQ  --device_id 5
+```
+
+
+## MOPO - Train
 
 ```
 # for hopper-medium-replay-v0 task
