@@ -79,6 +79,21 @@ python plotter.py --root-dir "log" --task "hopper-medium-replay-v0"
 python scorer.py --task "half-cheetah-v2"
 ```
 
+## Normalizing
+
+```normalizer.py``` outputs the mean and variance of the normalized mean reward for each run across the different datasets and methods. To use this script, provide the path to the results csv (arg 1) and the corresponding environment name (arg 2).
+
+Usage:
+```
+python normalizer.py <csv_path> <env_name>
+```
+
+Example:
+
+```
+python normalizer.py results/halfcheetah-expert-v0/bc/bc_results_0412_053158.csv halfcheetah-expert-v0
+```
+
 # Reproduced results
 All experiments were run for 2 random seeds each and learning curves are smoothed by averaging over a window of 10 epochs.
 
