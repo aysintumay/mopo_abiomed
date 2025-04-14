@@ -190,4 +190,4 @@ class BCQ(object):
 				target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 			
 			# return actor loss
-			return actor_loss.item()
+		return actor_loss.item()

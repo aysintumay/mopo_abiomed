@@ -26,9 +26,8 @@ def get_args():
     parser.add_argument("--logdir", type=str, default="results")
     parser.add_argument("--eval_episodes", type=int, default=10)
         
-    parser.add_argument("--eval_freq", default=5e4, type=float)     # How often (time steps) we evaluate
-    parser.add_argument("--max_timesteps", default=2e6, type=int)   # Max time steps to run environment or train for (this defines buffer size)
-    parser.add_argument("--start_timesteps", default=25e3, type=int)# Time steps initial random policy is used before training behavioral
+    parser.add_argument("--eval_freq", default=2e4, type=float)     # How often (time steps) we evaluate
+    parser.add_argument("--max_timesteps", default=1e6, type=int)   # Max time steps to run environment or train for (this defines buffer size)
     parser.add_argument("--rand_action_p", default=0.3, type=float) # Probability of selecting random action during batch generation
     parser.add_argument("--gaussian_std", default=0.3, type=float)  # Std of Gaussian exploration noise (Set to 0.1 if DDPG trains poorly)
     parser.add_argument("--batch_size", default=100, type=int)      # Mini batch size for networks
@@ -52,7 +51,7 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     dataset = d4rl.qlearning_dataset(env)
 
     N = dataset['rewards'].shape[0]
-    print('Loading buffer!')
+    print('Loading buffer! total size:', N)
     for i in range(N-1):
         obs = dataset['observations'][i]
         new_obs = dataset['observations'][i+1]
@@ -70,10 +69,11 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     while training_iters < args.max_timesteps: 
             print('Train step:', training_iters)
             pol_vals = policy.train(replay_buffer, iterations=int(args.eval_freq), batch_size=args.batch_size)
-            print(f'Iteration {training_iters} Actor loss: {pol_vals}')
 
-            evaluations.append(eval_policy(policy, args.task, seed, args.eval_episodes))
-            np.save(os.path.join(output_dir, f"{setting}"), evaluations)
+            ev = eval_policy(policy, args.task, seed, args.eval_episodes)
+            evaluations.append(ev)
+            
+            print(f'Iteration {training_iters} Actor loss: {pol_vals:.2f}, Eval Rewards: {np.mean(ev["eval/episode_reward"]):.2f}')
 
             training_iters += args.eval_freq
             print(f"Training iterations: {training_iters}")
@@ -85,7 +85,7 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
 # A fixed seed is used for the eval environment
 def eval_policy(policy, env_name, seed, eval_episodes=10):
     eval_env = gym.make(env_name) 
-    eval_env.seed(seed + 100)
+    eval_env.seed(seed)# + 100)
     eval_ep_info_buffer = []
 
     for _ in range(eval_episodes):
@@ -94,10 +94,10 @@ def eval_policy(policy, env_name, seed, eval_episodes=10):
             episode_length = 0
 
             while not done:
-                    action = policy.select_action(np.array(state))
-                    state, reward, done, _ = eval_env.step(action)
-                    ep_reward += reward
-                    episode_length += 1
+                action = policy.select_action(np.array(state))
+                state, reward, done, _ = eval_env.step(action)
+                ep_reward += reward
+                episode_length += 1
 
             eval_ep_info_buffer.append(
                 {"episode_reward": ep_reward, "episode_length": episode_length}
@@ -135,6 +135,8 @@ if __name__ == "__main__":
         device = torch.device(args.device_id if torch.cuda.is_available() else "cpu")
 
         evals = train_BCQ(env, state_dim, action_dim, max_action, device, args.model_dir, seed, args)
+        np.save(os.path.join(args.model_dir, f"{args.task}_{seed}"), evals)
+
         eval_results = evals[-1]
         # Evaluate
         mean_return = np.mean(eval_results["eval/episode_reward"])
