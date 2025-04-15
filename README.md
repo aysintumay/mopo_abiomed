@@ -37,13 +37,13 @@ python algo/bcq.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_
 
 For MBPO (change device to use the most available GPU):
 ```
-python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 0 --epoch 1 --seeds 1 2 3 --device cuda:5 
+python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 0 --epoch 600 --seeds 1 2 3 --device cuda:5 
 ```
 
 For MOPO (the difference is only `reward-penalty-coef` value):
 
 ```
-python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 1.0 --epoch 1 --seeds 1 2 3 --device cuda:5 
+python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 1.0 --epoch 600 --seeds 1 2 3 --device cuda:5 
 ```
 
 ## MOPO - Train
