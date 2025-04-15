@@ -237,6 +237,12 @@ class Trainer:
         episode_reward, episode_length = 0, 0
         acc_total = 0
         acc_1_off_total = 0
+        obs_ = []
+        next_obs_ = []
+        action_ = []
+        full_action_ = []
+        reward_ = []
+        terminal_ = []
         terminal_counter = 0
         while num_episodes <= self._eval_episodes:
             act = self.eval_env.get_pl()
@@ -281,13 +287,30 @@ class Trainer:
                     "episode_length", episode_length,
                     "episode_accuracy", acc_total/self._step_per_epoch, 
                     "episode_1_off_accuracy", acc_1_off_total/self._step_per_epoch)
+                
+                obs_.append(obs)
+                next_obs_.append(next_obs)
+                action_.append(action)
+                full_action_.append(full_pl)
+                reward_.append(reward)
+                terminal_.append(terminal)
 
+                
+        action_ = self.eval_env.unnormalize(np.array(action_), idx=12)
+        dataset = {
+                'observations': np.array(obs_),
+                'actions': np.array(action_).reshape(-1, 1),  # Reshape to ensure it's 2D
+                'rewards': np.array(reward_),
+                'terminals': np.array(terminal),
+                'next_observations': np.array(next_obs_),
+                'full_actions': np.array(full_action_).reshape(-1, 1),  # Reshape to ensure it's 2D
+            }
         return {
                 "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
                 "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer],
                 "eval/episode_accuracy": [ep_info["episode_accurcy"] for ep_info in eval_ep_info_buffer],
                 "eval/episode_1_off_accuracy": [ep_info["episode_1_off_accuracy"] for ep_info in eval_ep_info_buffer],
-            }
+            }, dataset
 
 
 

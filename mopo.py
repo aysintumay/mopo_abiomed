@@ -6,7 +6,9 @@ import random
 import wandb
 import numpy as np
 import torch
+import pandas as pd
 from matplotlib import pyplot as plt
+import pickle
 
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
@@ -32,7 +34,7 @@ def get_args():
     parser.add_argument("--model_path" , type=str, default="saved_models")
 
     parser.add_argument("--task", type=str, default="Abiomed-v0")
-    parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--seeds", type=int, nargs='+', default=[1, 2, 3])
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -54,14 +56,14 @@ def get_args():
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=100) #1000
-    parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
-    parser.add_argument("--eval_episodes", type=int, default=10)
+    parser.add_argument("--epoch", type=int, default=1) #1000
+    parser.add_argument("--step-per-epoch", type=int, default=1) #1000
+    parser.add_argument("--eval_episodes", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--log-freq", type=int, default=1000)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-
+    parser.add_argument("--device_id", type=int, default=7)
     #world transformer arguments
     parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
                         help='Specify the sequence dimension.')
@@ -69,7 +71,7 @@ def get_args():
                         help='Specify the sequence dimension.')
     parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
                         help='Specify the batch size.')
-    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
+    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=1,
                         help='Specify the number of epochs to train for.')
     parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
                 help='Set the number of encoder layers.') 
@@ -119,39 +121,59 @@ def main(args):
                 group=args.algo_name,
                 config=vars(args),
                 )
-    
-    # seed
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    if args.device != "cpu":
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+    results = []
+    for seed in args.seeds:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if args.device != "cpu":
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
 
-    # log
-    t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-    log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+        # log
+        t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
+        log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+        log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
-    model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
-    writer = SummaryWriter(log_path)
-    writer.add_text("args", str(args))
-    logger = Logger(writer=writer,log_path=log_path)
-    model_logger = Logger(writer=writer,log_path=model_path)
+        model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
+        writer = SummaryWriter(log_path)
+        writer.add_text("args", str(args))
+        logger = Logger(writer=writer,log_path=log_path)
+        model_logger = Logger(writer=writer,log_path=model_path)
 
-    Devid = 0 if args.device == 'cuda' else -1
-    set_device_and_logger(Devid, logger, model_logger)
+        Devid = args.device_id if args.device == 'cuda' else -1
+        set_device_and_logger(Devid, logger, model_logger)
 
-    args.model_path = model_path
-    args.pretrained = False
-    args.data_name = 'train'     #to be fast 
-    scaler_info = train(run, logger, args)
+        args.model_path = model_path
+        args.pretrained = False #to be fast
+        args.data_name = 'train'      
+        scaler_info = train(run, logger, seed, args)
 
-    args.data_name = 'test'
-    test(run, logger, model_logger, scaler_info, args)
+        args.data_name = 'test'
+        eval_info, dset = test(run, logger, model_logger, scaler_info, seed, args)
+
+        
 
 
-
+        mean_return = np.mean(eval_info["eval/episode_reward"])
+        std_return = np.std(eval_info["eval/episode_reward"])
+        mean_length = np.mean(eval_info["eval/episode_length"])
+        std_length = np.std(eval_info["eval/episode_length"])
+        results.append({
+            'seed': seed,
+            'mean_return': mean_return,
+            'std_return': std_return,
+            'mean_length': mean_length,
+            'std_length': std_length
+        })
+        
+        print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+    # Save results to CSV
+    os.makedirs(os.path.join('results', args.task, 'mopo'), exist_ok=True)
+    results_df = pd.DataFrame(results)
+    results_path = os.path.join('results', args.task, 'mopo', f"{args.task}_results_{t0}.csv")
+    results_df.to_csv(results_path, index=False)
+    print(f"Results saved to {results_path}")
 
 if __name__ == "__main__":
 

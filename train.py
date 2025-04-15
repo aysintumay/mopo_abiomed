@@ -85,17 +85,17 @@ def get_args():
     return parser.parse_args()
 
 
-def train(run, logger, args=get_args()):
+def train(run, logger, seed, args=get_args()):
 
     # create env and dataset
-
+    scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
     if args.task == "Abiomed-v0":
         gym.envs.registration.register(
         id='Abiomed-v0',
         entry_point='abiomed_env:AbiomedEnv',  
         max_episode_steps = 1000,
         )
-        kwargs = {"args": args, "logger": logger, "data_name": "train"}
+        kwargs = {"args": args, "logger": logger, 'scaler_info': scaler_info}
         env = gym.make(args.task, **kwargs)
     else:
         env = gym.make(args.task)
@@ -104,7 +104,7 @@ def train(run, logger, args=get_args()):
     args.action_dim = np.prod(env.action_space.shape)
     
 
-    env.seed(args.seed)
+    env.seed(seed)
 
 
     # import configs

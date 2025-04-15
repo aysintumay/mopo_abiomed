@@ -1,28 +1,34 @@
 import gym
 from gym import spaces
 import numpy as np
+import os
+import pickle
 import torch
 from world_transformer import WorldTransformer
 from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 
 class AbiomedEnv(gym.Env):
-    def __init__(self, args, logger, data_name, scaler_info=None):
+    def __init__(self, args=None, logger=None, scaler_info=None,):
         super(AbiomedEnv, self).__init__()
         # Replace obs_dim and action_dim with actual dimensions
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(12*90,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(12*90,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
-        self.logger = logger
         self.id = 'Abiomed-v0'
+    
+        self.pretrained = args.pretrained
+        self.logger = logger
         self.args = args
-        self.data_name = data_name
-        self.world_model = WorldTransformer(args = self.args, logger = self.logger, pretrained = self.args.pretrained)
+
+        self.scaler_info = scaler_info
+        self.rwd_means = scaler_info['rwd_means'] if scaler_info['rwd_means'] is not None else None
+        self.rwd_stds = scaler_info['rwd_stds'] if scaler_info['rwd_stds'] is not None else None
+        self.scaler = scaler_info['scaler'] if scaler_info['scaler'] else None
+
+        self.world_model = WorldTransformer(args = self.args, logger = self.logger, pretrained = self.pretrained)
         # self.trained_world_model = self.world_model.load_model()
         self.data = self.load_data()
         self.current_index = 0
-        self.rwd_means = scaler_info['rwd_means'] if scaler_info else []
-        self.rwd_stds = scaler_info['rwd_stds'] if scaler_info else []
-        self.scaler = scaler_info['scaler'] if scaler_info else None
 
     def load_data(self):
         # Implement your data loading logic here.
@@ -79,27 +85,35 @@ class AbiomedEnv(gym.Env):
                     'full_actions': np.array(full_action_l)  # Store the full action for analysis
                     }
     
-        train = torch.load(f"/data/abiomed_tmp/processed/pp_{self.data_name}_amicgs.pt").numpy()
+        train = torch.load(f"/data/abiomed_tmp/processed/pp_{self.args.data_name}_amicgs.pt").numpy()[:5]
             
-        if self.data_name == 'train':
-                #dont take ID column
+        if self.args.data_name == 'train':
+            #dont take ID column
             train = train[: ,:, :-1]
             self.rwd_means = train.mean(axis=(0, 1))
             self.rwd_stds = train.std(axis=(0, 1))
             train_dict = generate_buffer(train)
+
+            if not os.path.exists('intermediate_data'):
+                os.makedirs('intermediate_data')
+            with open(os.path.join('intermediate_data',f'dataset_train_0.pkl'), 'wb') as f:
+                pickle.dump(train_dict, f)
             
         else:
+            train = train[:, :, :-1]
             train_dict = generate_buffer(train)
+            with open(os.path.join('intermediate_data',f'dataset_test_0.pkl'), 'wb') as f:
+                pickle.dump(train_dict, f)
 
         return train_dict
     
 
     def normalize_reward(self, rewards):
-        if self.scaler:
-            rewards = self.scaler.transform(rewards)
+        if self.scaler is not None:
+            normalized_rewards = self.scaler.transform(np.array(rewards).reshape(-1,1))
         else:
             scaler = MinMaxScaler()
-            rewards = rewards.reshape(-1, 1)
+            rewards = np.array(rewards).reshape(-1,1)
             scaler.fit(rewards)
             normalized_rewards = scaler.transform(rewards)
             self.scaler = scaler
@@ -128,6 +142,9 @@ class AbiomedEnv(gym.Env):
     
     def unnormalize(self, data, idx):
          return data  * self.rwd_stds[idx] +  self.rwd_means[idx]
+    
+    def normalize(self, data, idx):
+        return (data - self.rwd_means[idx]) / self.rwd_stds[idx]
 
     def step(self, action):
         """Run one timestep of the environment's dynamics. When end of

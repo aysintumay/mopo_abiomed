@@ -4,6 +4,7 @@ import os
 import random
 import importlib
 import wandb 
+import pickle
 
 import gym
 import d4rl
@@ -93,7 +94,10 @@ def get_eval(policy, env, logger, trainer, args,):
     trainer.algo.policy = policy
 
     if args.task == 'Abiomed-v0':
-        eval_info = trainer.evaluate()
+        eval_info,dset = trainer.evaluate()
+        #to plot the results
+        with open(os.path.join('intermediate_data',f'dataset_test_1.pkl'), 'wb') as f:
+            pickle.dump(dset, f)
     else:
         eval_info = trainer._evaluate()
     ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
@@ -132,9 +136,10 @@ def get_eval(policy, env, logger, trainer, args,):
     # if args.task == 'Abiomed-v0':
     #     logger.record("avg episode_accuracy", np.array(acc_l).mean(), args.eval_episodes, printed=False)
     #     logger.record("avg episode_1_off_accuracy", np.array(off_acc).mean(), args.eval_episodes, printed=False)
+    return eval_info, dset
+    
 
-
-def test(run, logger, model_logger, norm_info, args=get_args()):
+def test(run, logger, model_logger, norm_info, seed, args=get_args()):
 
 
     # create env and dataset
@@ -144,7 +149,7 @@ def test(run, logger, model_logger, norm_info, args=get_args()):
         entry_point='abiomed_env:AbiomedEnv',  
         max_episode_steps = 1000,
         )
-        kwargs = {"args": args, "logger": logger, "data_name": "test", 'scaler_info': norm_info}
+        kwargs = {"args": args, "logger": logger, 'scaler_info': norm_info}
         env = gym.make(args.task, **kwargs)
     else:
         env = gym.make(args.task)
@@ -153,7 +158,7 @@ def test(run, logger, model_logger, norm_info, args=get_args()):
     args.action_dim = np.prod(env.action_space.shape)
     
 
-    env.seed(args.seed)
+    env.seed(seed)
 
 
     # import configs
@@ -264,7 +269,9 @@ def test(run, logger, model_logger, norm_info, args=get_args()):
     policy_state_dict = torch.load(os.path.join(model_logger.log_path, f'policy_{args.task}.pth'))
     sac_policy.load_state_dict(policy_state_dict)
 
-    get_eval(sac_policy, env, logger, trainer, args)
+    eval_info, dset = get_eval(sac_policy, env, logger, trainer, args)
+    return eval_info,dset
+
     
 if __name__ == "__main__":
 
