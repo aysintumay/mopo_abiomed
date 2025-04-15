@@ -25,12 +25,16 @@ from common.util import set_device_and_logger
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo-name", type=str, default="mopo")
-    # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
     parser.add_argument("--pretrained", type=bool, default=True)
-
     
     parser.add_argument("--task", type=str, default="Abiomed-v0")
     parser.add_argument("--seed", type=int, default=1)
+    
+    # for running baselines
+    parser.add_argument("--seeds", type=int, nargs='+', default=[])
+    parser.add_argument("--baseline-logdir", type=str, default="results")
+
+
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -214,7 +218,7 @@ def train(run, logger, args=get_args()):
         rollout_freq=args.rollout_freq,
         logger=logger,
         log_freq=args.log_freq,
-        run_id = run.id,
+        run_id = run.id if run!=None else 0,
         env_name = args.task,
         eval_episodes=args.eval_episodes,
         
@@ -228,13 +232,38 @@ def train(run, logger, args=get_args()):
     # begin train
     trainer.train_policy()
 
-    return  {
-        'rwd_stds': env.rwd_stds,
-        'rwd_means': env.rwd_means, 
-        'scaler': env.scaler
-        } if args.task == "Abiomed-v0" else None
+    if args.task == "Abiomed-v0":
+        return  {
+            'rwd_stds': env.rwd_stds,
+            'rwd_means': env.rwd_means, 
+            'scaler': env.scaler
+            } 
+    else:
+        return sac_policy, trainer
 
 if __name__ == "__main__":
-
+    args = get_args()
     
-    train()
+
+    # seed
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if args.device != "cpu":
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    # log
+    t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
+    log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+    writer = SummaryWriter(log_path)
+    writer.add_text("args", str(args))
+    logger = Logger(writer=writer,log_path=log_path)
+
+    Devid = 0 if args.device == 'cuda' else -1
+    set_device_and_logger(Devid,logger)
+
+    run = None # no wandb for baselines
+
+    train(run, logger, args)
