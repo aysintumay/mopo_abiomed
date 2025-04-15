@@ -22,7 +22,7 @@ python mopo.py --task Abiomed-v0 --reward-penalty-coef 1e-3 --model_path 'saved_
 
 ## Baselines
 
-BC and BCQ implementations. We want to run for the following list of baselines:
+BC and BCQ, and MBPO implementations. We want to run for the following list of baselines:
 
 - halfcheetah-random-v0
 - halfcheetah-expert-v0
@@ -35,6 +35,16 @@ python algo/bc.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_m
 python algo/bcq.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BCQ  --device_id 5
 ```
 
+For MBPO (change device to use the most available GPU):
+```
+python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 0 --epoch 600 --seeds 1 2 3 --device cuda:5 
+```
+
+For MOPO (the difference is only `reward-penalty-coef` value):
+
+```
+python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 1.0 --epoch 600 --seeds 1 2 3 --device cuda:5 
+```
 
 ## MOPO - Train
 

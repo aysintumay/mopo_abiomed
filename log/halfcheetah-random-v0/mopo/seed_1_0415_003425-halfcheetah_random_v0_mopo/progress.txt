@@ -1,0 +1,5 @@
+Start training dynamics
+loss/model_eval_mse_loss: 38.591763
+loss/model_eval_mse_loss: 0.806029
+total time: 64.815s
+Epoch #1: episode_reward: -2.209 ± 0.869,                               episode_length: 1000.000 ± 0.000

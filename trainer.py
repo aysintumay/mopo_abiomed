@@ -87,10 +87,13 @@ class Trainer:
 
         self._eval_episodes = eval_episodes
 
-        run = wandb.init(project="abiomed",
-                id=self.run_id,
-                resume="allow"
-                )
+        if self.run_id !=0 :
+
+            run = wandb.init(project="abiomed",
+                    id=self.run_id,
+                    resume="allow"
+                    )
+            
     def train_dynamics(self):
         start_time = time.time()
         self.algo.learn_dynamics()
@@ -172,21 +175,23 @@ class Trainer:
             if not os.path.exists(model_save_dir):
                 os.makedirs(model_save_dir)
             torch.save(self.algo.policy.state_dict(), os.path.join(model_save_dir, f"policy_{self.env_name}.pth"))
-        #plot q_values for each epoch
-        plot_q_value(np.array(q1_l).reshape(-1,1), 'Q1')
-        plot_q_value(np.array(q2_l).reshape(-1,1), 'Q2')
-        plot_q_value(np.array(q_l).reshape(-1,1), 'Q')
+        
+        if self.run_id != 0:
+            #plot q_values for each epoch
+            plot_q_value(np.array(q1_l).reshape(-1,1), 'Q1')
+            plot_q_value(np.array(q2_l).reshape(-1,1), 'Q2')
+            plot_q_value(np.array(q_l).reshape(-1,1), 'Q')
 
-        plot_p_loss(np.array(critic_loss1).reshape(-1,1), 'Critic1')
-        plot_p_loss(np.array(critic_loss2).reshape(-1,1), 'Critic2')
-        plot_p_loss(np.array(actor_loss).reshape(-1,1), 'Actor')
-        plot_p_loss(np.array(entropy).reshape(-1,1), 'Entropy')
-        plot_p_loss(np.array(alpha_loss).reshape(-1,1), 'Alpha')
+            plot_p_loss(np.array(critic_loss1).reshape(-1,1), 'Critic1')
+            plot_p_loss(np.array(critic_loss2).reshape(-1,1), 'Critic2')
+            plot_p_loss(np.array(actor_loss).reshape(-1,1), 'Actor')
+            plot_p_loss(np.array(entropy).reshape(-1,1), 'Entropy')
+            plot_p_loss(np.array(alpha_loss).reshape(-1,1), 'Alpha')
 
-        plot_accuracy(np.array(reward_l), np.array(reward_std_l)/self._eval_episodes, 'Average Return')
-        if self.env_name == 'Abiomed-v0':
-            plot_accuracy(np.array(acc_l), np.array(acc_std_l)/self._eval_episodes, 'Accuracy')
-            plot_accuracy(np.array(off_acc), np.array(off_acc_std)/self._eval_episodes, '1-off Accuracy')
+            plot_accuracy(np.array(reward_l), np.array(reward_std_l)/self._eval_episodes, 'Average Return')
+            if self.env_name == 'Abiomed-v0':
+                plot_accuracy(np.array(acc_l), np.array(acc_std_l)/self._eval_episodes, 'Accuracy')
+                plot_accuracy(np.array(off_acc), np.array(off_acc_std)/self._eval_episodes, '1-off Accuracy')
 
 
         self.logger.print("total time: {:.3f}s".format(time.time() - start_time))
@@ -194,16 +199,16 @@ class Trainer:
 
 
 
-    def _evaluate(policy, eval_env, episodes):
-        policy.eval()
-        obs = eval_env.reset()
+    def _evaluate(self):
+        self.algo.policy.eval()
+        obs = self.eval_env.reset()
         eval_ep_info_buffer = []
         num_episodes = 0
         episode_reward, episode_length = 0, 0
 
-        while num_episodes < episodes:
-            action = policy.sample_action(obs, deterministic=True)
-            next_obs, reward, terminal, _ = eval_env.step(action)
+        while num_episodes < self._eval_episodes:
+            action = self.algo.policy.sample_action(obs, deterministic=True)
+            next_obs, reward, terminal, _ = self.eval_env.step(action)
             episode_reward += reward
             episode_length += 1
 
@@ -215,12 +220,12 @@ class Trainer:
                 )
 
                 #d4rl don't have REF_MIN_SCORE and REF_MAX_SCORE for v2 environments
-                dset_name = eval_env.unwrapped.spec.name+'-v0'
-                print(d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100)
+                dset_name = self.eval_env.unwrapped.spec.name+'-v0'
+                self.logger.print( f"normalized score: {d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100}")
 
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
-                obs = eval_env.reset()
+                obs = self.eval_env.reset()
 
         return {
             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
