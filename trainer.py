@@ -19,7 +19,7 @@ def plot_accuracy(mean_acc, std_acc, name=''):
     ax.set_ylabel(f'{name}')
     ax.set_title(f'{name} Over Epochs')
     ax.legend()
-    wandb.log({f"{name}": wandb.Image(fig)})
+    # wandb.log({f"{name}": wandb.Image(fig)})
 
 
 def plot_p_loss(critic1,name=''):
@@ -35,7 +35,7 @@ def plot_p_loss(critic1,name=''):
     ax.set_ylabel('Loss')
     ax.set_title(f'{name} Loss Over Time')
     ax.legend()
-    wandb.log({f"{name} Loss": wandb.Image(fig)})
+    # wandb.log({f"{name} Loss": wandb.Image(fig)})
 
 
 def plot_q_value(q1, name=''):
@@ -52,7 +52,7 @@ def plot_q_value(q1, name=''):
     ax.set_ylabel('Loss')
     ax.set_title(f'{name} Value Over Time')
     ax.legend()
-    wandb.log({f"{name} Value": wandb.Image(fig)})
+    # wandb.log({f"{name} Value": wandb.Image(fig)})
 
 
 class Trainer:
@@ -136,7 +136,7 @@ class Trainer:
                     t.update(1)
             # evaluate current policy
             if self.env_name == 'Abiomed-v0':
-                eval_info = self.evaluate()
+                eval_info, _ = self.evaluate()
             else:
                 eval_info = self._evaluate()
             ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
@@ -349,7 +349,7 @@ class Trainer:
         ax2.set_ylabel('Pump Speed',  fontsize=20)
         ax1.set_xlabel('Time (min)', fontsize=20)
         ax1.set_title(f"MAP Prediction and P-level")
-        wandb.log({f"plot_batch_{iter}": wandb.Image(fig)})
+        # wandb.log({f"plot_batch_{iter}": wandb.Image(fig)})
 
         plt.show()
 

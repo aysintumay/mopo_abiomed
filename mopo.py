@@ -13,7 +13,7 @@ import pickle
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
-
+from algo.mbpo import evaluate as evaluate_mbpo
 from test import test
 from train import train, get_args
 from common.buffer import ReplayBuffer

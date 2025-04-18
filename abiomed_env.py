@@ -85,7 +85,7 @@ class AbiomedEnv(gym.Env):
                     'full_actions': np.array(full_action_l)  # Store the full action for analysis
                     }
     
-        train = torch.load(f"/data/abiomed_tmp/processed/pp_{self.args.data_name}_amicgs.pt").numpy()[:5]
+        train = torch.load(f"/data/abiomed_tmp/processed/pp_{self.args.data_name}_amicgs.pt").numpy()
             
         if self.args.data_name == 'train':
             #dont take ID column

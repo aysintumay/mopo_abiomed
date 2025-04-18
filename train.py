@@ -20,6 +20,7 @@ from common.buffer import ReplayBuffer
 from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
+from common import util
 
 
 def get_args():

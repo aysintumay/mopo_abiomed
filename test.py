@@ -99,7 +99,7 @@ def get_eval(policy, env, logger, trainer, args,):
         with open(os.path.join('intermediate_data',f'dataset_test_1.pkl'), 'wb') as f:
             pickle.dump(dset, f)
     else:
-        eval_info = trainer._evaluate()
+        eval_info, _ = trainer._evaluate()
     ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
     ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
     if args.task == 'Abiomed-v0':
