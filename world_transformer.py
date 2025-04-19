@@ -25,15 +25,25 @@ class WorldTransformer:
     def __init__(self, args, logger, pretrained = True):
         super(WorldTransformer, self).__init__()
 
-        self.path = args.path
+        # Set default values for all arguments
+        self.path = getattr(args, 'path', '/data/abiomed_tmp/processed')
+        self.seq_dim = getattr(args, 'seq_dim', 12)
+        self.output_dim = getattr(args, 'output_dim', 11*12)
+        self.bc = getattr(args, 'bc', 64)
+        self.nepochs = getattr(args, 'nepochs', 20)
+        self.encs = getattr(args, 'encs', 2)
+        self.lr = getattr(args, 'lr', 0.001)
+        self.encoder_dropout = getattr(args, 'encoder_dropout', 0.1)
+        self.decoder_dropout = getattr(args, 'decoder_dropout', 0)
+        self.dim_model = getattr(args, 'dim_model', 256)
+        
         self.logger = logger
-        self.args = args
         self.device = util.device
 
-        self.model = TimeSeriesTransformer(input_dim=self.args.seq_dim, output_dim=self.args.output_dim, dim_model=self.args.dim_model,
-                                                num_encoder_layers = self.args.encs, pl_shape = 10,
-                                                encoder_dropout = self.args.encoder_dropout, 
-                                                decoder_dropout = self.args.decoder_dropout, 
+        self.model = TimeSeriesTransformer(input_dim=self.seq_dim, output_dim=self.output_dim, dim_model=self.dim_model,
+                                                num_encoder_layers = self.encs, pl_shape = 10,
+                                                encoder_dropout = self.encoder_dropout, 
+                                                decoder_dropout = self.decoder_dropout, 
                                                 device=self.device)
         # self.train_loader = self.read_data('train')
         # self.test_loader = self.read_data(mode = 'test') 
@@ -54,11 +64,11 @@ class WorldTransformer:
     def train_model(self):
 
         start_time = time.time()
-        optimizer = optim.Adam(self.model.parameters(), lr=self.args.lr)
+        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         criterion = nn.MSELoss()
         train_losses = []
-        print(f"number of epochs {self.args.nepochs}")
-        for epoch in range(self.args.nepochs):
+        print(f"number of epochs {self.nepochs}")
+        for epoch in range(self.nepochs):
             self.model.train()
             total_loss = 0
             for src, pl, tgt in tqdm(self.train_loader):
@@ -78,7 +88,7 @@ class WorldTransformer:
         
         if not os.path.exists(self.model_save_dir):
             os.makedirs(self.model_save_dir)
-        torch.save(self.model.state_dict(),  os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.args.nepochs}.pth"))
+        torch.save(self.model.state_dict(),  os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.nepochs}.pth"))
         self.logger.print("World model total time: {:.3f}s".format(time.time() - start_time))
         return self.model
 
@@ -90,7 +100,7 @@ class WorldTransformer:
         dta = dta[: ,:, :-1]
         self.rwd_mean = dta.mean(axis=(0, 1))
         self.rwd_std = dta.std(axis=(0, 1))
-        horizon = int(self.args.output_dim/12-1)
+        horizon = int(self.output_dim/12-1)
         if mode == 'test':
             dta = torch.load(os.path.join(self.path, 'pp_test_amicgs.pt')).numpy()
             dta = dta[: ,:, :-1]
@@ -101,7 +111,7 @@ class WorldTransformer:
         print("plshape is ", pl.shape)
         pl = pl[..., :horizon]
         dataset = TimeSeriesDataset(x, pl, y)
-        loader = DataLoader(dataset, batch_size=self.args.bc, shuffle=True)
+        loader = DataLoader(dataset, batch_size=self.bc, shuffle=True)
         return loader
 
     def resize(self, obs, action, next_state):
@@ -111,14 +121,14 @@ class WorldTransformer:
         x = obs.reshape(n,90,12)
         y = next_state.reshape((n, 90*12))
         action = action.reshape(-1,90)
-        loader = DataLoader(TimeSeriesDataset(x, action, y), batch_size=self.args.bc, shuffle=False)
+        loader = DataLoader(TimeSeriesDataset(x, action, y), batch_size=self.bc, shuffle=False)
         return loader
     
     def load_model(self):
         # Load the model state dict
     
         # self.model.load_state_dict(torch.load(os.path.join(self.logger.writer.get_logdir(), f"checkpoint_epoch_{self.args.epoch}.pth")))
-        self.model.load_state_dict(torch.load(os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.args.nepochs}.pth")))
+        self.model.load_state_dict(torch.load(os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.nepochs}.pth")))
         return self.model.to(self.device)
     
     def predict(self, obs_loader):
