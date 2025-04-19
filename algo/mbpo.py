@@ -19,6 +19,7 @@ from test import *
 def evaluate(policy, seed, trainer, args):
 
     trainer.eval_env = gym.make(args.task)
+    trainer.eval_env.seed(seed)
     trainer.algo.policy = policy
 
     eval_info = trainer._evaluate()
@@ -44,30 +45,30 @@ def main():
     experiment_name = "mbpo" if args.reward_penalty_coef == 0 else "mopo"
     print(f"Based on reward penalty, experiment name: {experiment_name}")
 
+    
+    if args.device != "cpu":
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    # random.seed(args.seed)
+    # np.random.seed(args.seed)
+    # torch.manual_seed(args.seed)
+    # log
+    log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+    writer = SummaryWriter(log_path)
+    writer.add_text("args", str(args))
+    logger = Logger(writer=writer,log_path=log_path)
+
+    devid = args.device.split(':')[-1]
+    Devid = int(devid) if len(devid)==1 else -1
+    set_device_and_logger(Devid,logger, logger)
+
+    run = None # no wandb for baselines
+    policy, trainer = train(run, logger, args)
+    trainer.algo.save_dynamics_model(f"dynamics_model")
+    
     for seed in args.seeds:
-        # seed
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        if args.device != "cpu":
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
-        args.seed = seed
-
-        # log
-        log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-        log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
-        writer = SummaryWriter(log_path)
-        writer.add_text("args", str(args))
-        logger = Logger(writer=writer,log_path=log_path)
-
-        devid = args.device.split(':')[-1]
-        Devid = int(devid) if len(devid)==1 else -1
-        set_device_and_logger(Devid,logger, logger)
-
-        run = None # no wandb for baselines
-        policy, trainer = train(run, logger, args)
-        trainer.algo.save_dynamics_model(f"dynamics_model")
         results.append(evaluate(policy, seed, trainer, args))
 
     
