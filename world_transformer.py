@@ -36,6 +36,8 @@ class WorldTransformer:
         self.encoder_dropout = getattr(args, 'encoder_dropout', 0.1)
         self.decoder_dropout = getattr(args, 'decoder_dropout', 0)
         self.dim_model = getattr(args, 'dim_model', 256)
+        self.args = args
+
         
         self.logger = logger
         self.device = util.device
@@ -88,7 +90,7 @@ class WorldTransformer:
         
         if not os.path.exists(self.model_save_dir):
             os.makedirs(self.model_save_dir)
-        torch.save(self.model.state_dict(),  os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.nepochs}.pth"))
+        torch.save(self.model.to('cpu').state_dict(),  os.path.join('/data/models/world_model/', f"checkpoint_epoch_{self.args.task}_{self.nepochs}.pth"))
         self.logger.print("World model total time: {:.3f}s".format(time.time() - start_time))
         return self.model
 
@@ -116,19 +118,17 @@ class WorldTransformer:
 
     def resize(self, obs, action, next_state):
         # resize [N,1080] to [N,90, 12]
-        n = int(obs.shape[0]/(12*90))
+        n = int(obs.shape[0]/(self.seq_dim*90))
         #dont take the p-level into the observation space
-        x = obs.reshape(n,90,12)
-        y = next_state.reshape((n, 90*12))
+        x = obs.reshape(n,90,self.seq_dim)
+        y = next_state.reshape((n, 90*self.seq_dim))
         action = action.reshape(-1,90)
         loader = DataLoader(TimeSeriesDataset(x, action, y), batch_size=self.bc, shuffle=False)
         return loader
     
     def load_model(self):
         # Load the model state dict
-    
-        # self.model.load_state_dict(torch.load(os.path.join(self.logger.writer.get_logdir(), f"checkpoint_epoch_{self.args.epoch}.pth")))
-        self.model.load_state_dict(torch.load(os.path.join(self.model_save_dir, f"checkpoint_epoch_{self.nepochs}.pth")))
+        self.model.load_state_dict(torch.load(os.path.join('/data/models/world_model', f"checkpoint_epoch_{self.args.task}_{self.nepochs}.pth")))
         return self.model.to(self.device)
     
     def predict(self, obs_loader):
@@ -143,7 +143,7 @@ class WorldTransformer:
                 for i in range(9):
                     pl_i = pl[:, i*10:(i+1)*10].to(self.device)
                     output = self.trained_model(input_i, pl_i)
-                    output_reshaped = output.reshape([output.shape[0], 11, 12])[:, 1:,:] #only take new predictions, ignore first datapoint
+                    output_reshaped = output.reshape([output.shape[0], 11, self.seq_dim])[:, 1:,:] #only take new predictions, ignore first datapoint
                     outputs.append(output_reshaped)
                     input_i = torch.concat([input_i[:,10:,:].to(self.device), output_reshaped], axis=1)
                 #64x90x6

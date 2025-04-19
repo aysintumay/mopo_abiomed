@@ -76,7 +76,7 @@ def get_args():
                         help='Specify the sequence dimension.')
     parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
                         help='Specify the batch size.')
-    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=1,
+    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
                         help='Specify the number of epochs to train for.')
     parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
                 help='Set the number of encoder layers.') 
@@ -138,8 +138,8 @@ def main(args):
 
         # log
         t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-        # log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-        log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
+        log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+        # log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
         log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
         model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
@@ -152,7 +152,7 @@ def main(args):
         set_device_and_logger(Devid, logger, model_logger)
 
         args.model_path = model_path
-        args.pretrained = False #to be fast
+        args.pretrained = True #to be fast
         args.data_name = 'train'
        
         if args.task == 'Abiomed-v0':
