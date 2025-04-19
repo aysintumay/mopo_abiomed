@@ -21,6 +21,7 @@ from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
 from common import util
+from abiomed_env import AbiomedEnv
 
 
 def get_args():
@@ -102,9 +103,14 @@ def train(run, logger, seed, args=get_args()):
         )
         kwargs = {"args": args, "logger": logger, 'scaler_info': scaler_info}
         env = gym.make(args.task, **kwargs)
+        dataset = env.qlearning_dataset()
     else:
         env = gym.make(args.task)
-    dataset = d4rl.qlearning_dataset(env)
+        dataset = d4rl.qlearning_dataset(env)
+
+    #CHANGE
+    # dataset = {k: v[:5] for k, v in dataset.items()}
+
     args.obs_shape = env.observation_space.shape
     args.action_dim = np.prod(env.action_space.shape)
     
@@ -130,9 +136,9 @@ def train(run, logger, seed, args=get_args()):
         conditioned_sigma=True
     )
 
-    actor = ActorProb(actor_backbone, dist, args.device)
-    critic1 = Critic(critic1_backbone, args.device)
-    critic2 = Critic(critic2_backbone, args.device)
+    actor = ActorProb(actor_backbone, dist, util.device)
+    critic1 = Critic(critic1_backbone, util.device)
+    critic2 = Critic(critic2_backbone, util.device)
     actor_optim = torch.optim.Adam(actor.parameters(), lr=args.actor_lr)
     critic1_optim = torch.optim.Adam(critic1.parameters(), lr=args.critic_lr)
     critic2_optim = torch.optim.Adam(critic2.parameters(), lr=args.critic_lr)
@@ -143,7 +149,7 @@ def train(run, logger, seed, args=get_args()):
         target_entropy = -np.prod(env.action_space.shape)
         args.target_entropy = target_entropy
 
-        log_alpha = torch.zeros(1, requires_grad=True, device=args.device)
+        log_alpha = torch.zeros(1, requires_grad=True, device=util.device)
         alpha_optim = torch.optim.Adam([log_alpha], lr=args.alpha_lr)
         args.alpha = (target_entropy, log_alpha, alpha_optim)
 
@@ -160,7 +166,7 @@ def train(run, logger, seed, args=get_args()):
         tau=args.tau,
         gamma=args.gamma,
         alpha=args.alpha,
-        device=args.device
+        device=util.device
     )
 
     # create dynamics model
@@ -222,6 +228,7 @@ def train(run, logger, seed, args=get_args()):
         run_id = run.id if run!=None else 0,
         env_name = args.task,
         eval_episodes=args.eval_episodes,
+        terminal_counter= args.terminal_counter if args.task == "Abiomed-v0" else None,
         
     )
 
@@ -229,7 +236,8 @@ def train(run, logger, seed, args=get_args()):
     trainer.train_dynamics()
     #  
 
-    
+    # policy_state_dict = torch.load(os.path.join(util.logger_model.log_path, f"policy_{args.task}.pth"))
+    # sac_policy.load_state_dict(policy_state_dict)
     # begin train
     trainer.train_policy()
 
@@ -238,7 +246,7 @@ def train(run, logger, seed, args=get_args()):
             'rwd_stds': env.rwd_stds,
             'rwd_means': env.rwd_means, 
             'scaler': env.scaler
-            } 
+            } , sac_policy, trainer, 
     else:
         return sac_policy, trainer
 
@@ -262,7 +270,7 @@ if __name__ == "__main__":
     writer.add_text("args", str(args))
     logger = Logger(writer=writer,log_path=log_path)
 
-    Devid = 0 if args.device == 'cuda' else -1
+    Devid = args.device_id if args.device == 'cuda' else -1
     set_device_and_logger(Devid,logger)
 
     run = None # no wandb for baselines

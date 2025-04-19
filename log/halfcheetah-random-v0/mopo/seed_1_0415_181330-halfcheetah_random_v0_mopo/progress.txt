@@ -1,0 +1,12 @@
+Start training dynamics
+loss/model_eval_mse_loss: 17.890371
+loss/model_eval_mse_loss: 17.894701
+loss/model_eval_mse_loss: 17.897585
+loss/model_eval_mse_loss: 17.897293
+loss/model_eval_mse_loss: 17.892534
+loss/model_eval_mse_loss: 17.881876
+total time: 0.554s
+normalized score: 2.2520667961274823
+Epoch #1: episode_reward: -0.581 ± 0.000,                               episode_length: 1000.000 ± 0.000
+total time: 51.744s
+normalized score: 2.2586324920709555

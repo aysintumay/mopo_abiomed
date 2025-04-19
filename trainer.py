@@ -69,6 +69,7 @@ class Trainer:
         run_id,
         env_name = '',
         eval_episodes=10,
+        terminal_counter=1
         
     ):
         self.algo = algo
@@ -86,6 +87,7 @@ class Trainer:
         # self.world_model = world_model 
 
         self._eval_episodes = eval_episodes
+        self.terminal_counter = terminal_counter
 
         if self.run_id !=0 :
 
@@ -135,40 +137,41 @@ class Trainer:
                     num_timesteps += 1
                     t.update(1)
             # evaluate current policy
-            if self.env_name == 'Abiomed-v0':
-                eval_info, _ = self.evaluate()
-            else:
-                eval_info = self._evaluate()
-            ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
-            ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
-            
-            if self.env_name == 'Abiomed-v0':
-                ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info["eval/episode_accuracy"]), np.std(eval_info["eval/episode_accuracy"])
-                ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info["eval/episode_1_off_accuracy"]), np.std(eval_info["eval/episode_1_off_accuracy"])
-           
-            
-            reward_l.append(ep_reward_mean)
-            reward_std_l.append(ep_reward_std)
-            if self.env_name == 'Abiomed-v0':
-                acc_l.append(ep_accuracy_mean)
-                off_acc.append(ep_1_off_accuracy_mean)
-                acc_std_l.append(ep_accuracy_std)
-                off_acc_std.append(ep_1_off_accuracy_std)
-            
-            self.logger.record("eval/episode_reward", ep_reward_mean, num_timesteps, printed=False)
-            self.logger.record("eval/episode_length", ep_length_mean, num_timesteps, printed=False)
-            if self.env_name == 'Abiomed-v0':
+            if e % 10 == 0:
+                if self.env_name == 'Abiomed-v0':
+                    eval_info, _ = self.evaluate()
+                else:
+                    eval_info = self._evaluate()
+                ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
+                ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
                 
-                self.logger.record("eval/episode_accuracy", ep_accuracy_mean, num_timesteps, printed=False)
-                self.logger.record("eval/episode_1_off_accuracy", ep_1_off_accuracy_mean, num_timesteps, printed=False)
+                if self.env_name == 'Abiomed-v0':
+                    ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info["eval/episode_accuracy"]), np.std(eval_info["eval/episode_accuracy"])
+                    ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info["eval/episode_1_off_accuracy"]), np.std(eval_info["eval/episode_1_off_accuracy"])
+            
+                
+                reward_l.append(ep_reward_mean)
+                reward_std_l.append(ep_reward_std)
+                if self.env_name == 'Abiomed-v0':
+                    acc_l.append(ep_accuracy_mean)
+                    off_acc.append(ep_1_off_accuracy_mean)
+                    acc_std_l.append(ep_accuracy_std)
+                    off_acc_std.append(ep_1_off_accuracy_std)
+                
+                self.logger.record("eval/episode_reward", ep_reward_mean, num_timesteps, printed=False)
+                self.logger.record("eval/episode_length", ep_length_mean, num_timesteps, printed=False)
+                if self.env_name == 'Abiomed-v0':
+                    
+                    self.logger.record("eval/episode_accuracy", ep_accuracy_mean, num_timesteps, printed=False)
+                    self.logger.record("eval/episode_1_off_accuracy", ep_1_off_accuracy_mean, num_timesteps, printed=False)
+                    self.logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
+                                    episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f},\
+                                    episode_accuracy: {ep_accuracy_mean:.3f} ± {ep_accuracy_std:.3f},\
+                                    episode_1_off_accuracy: {ep_1_off_accuracy_mean:.3f} ± {ep_1_off_accuracy_std:.3f}"
+                                    )
                 self.logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
-                                   episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f},\
-                                   episode_accuracy: {ep_accuracy_mean:.3f} ± {ep_accuracy_std:.3f},\
-                                   episode_1_off_accuracy: {ep_1_off_accuracy_mean:.3f} ± {ep_1_off_accuracy_std:.3f}"
-                                   )
-            self.logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
-                               episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f}"
-                               )
+                                episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f}"
+                                )
         
             # save policy
             model_save_dir = util.logger_model.log_path
@@ -208,11 +211,11 @@ class Trainer:
 
         while num_episodes < self._eval_episodes:
             action = self.algo.policy.sample_action(obs, deterministic=True)
-            next_obs, reward, terminal, _ = self.eval_env.step(action)
+            next_obs, reward, terminal, _ = self.eval_env.step(action) #next_obs = world model forecast
             episode_reward += reward
             episode_length += 1
 
-            obs = next_obs
+            obs = next_obs  #next_obs = world model forecast
 
             if terminal:
                 eval_ep_info_buffer.append(
@@ -240,8 +243,8 @@ class Trainer:
         eval_ep_info_buffer = []
         num_episodes = 0
         episode_reward, episode_length = 0, 0
-        acc_total = 0
-        acc_1_off_total = 0
+        # acc_total = 0
+        # acc_1_off_total = 0
         obs_ = []
         next_obs_ = []
         action_ = []
@@ -249,49 +252,52 @@ class Trainer:
         reward_ = []
         terminal_ = []
         terminal_counter = 0
-        while num_episodes <= self._eval_episodes:
+        print(' # of eval episodes:', self._eval_episodes) 
+        while num_episodes < self._eval_episodes:
+            start_time = time.time()
+       
             act = self.eval_env.get_pl()
-            if num_episodes % 2 == 0:
-                next_state_gt = self.eval_env.get_next_obs() #next state gt
-            else:
-                next_state_gt = self.eval_env.get_obs()
+           
+            next_state_gt = self.eval_env.get_next_obs() #get next state ground truth for plotting
             action = self.algo.policy.sample_action(obs, deterministic=True)
             action = action.repeat(90) #repeat the action for 90 steps
 
-            full_pl = self.eval_env.get_full_pl()
-            next_obs, reward, terminal, _ = self.eval_env.step(action) #next state predictions
-            # print(f'reward func rew:{reward}')
-            #obs: (0,90) next_state_gt:(90,180) next_obs: (90,180), action: (90,180) act: (90,180)
+            full_pl = self.eval_env.get_full_pl() #for plotting
+
+            #use next_obs only for evaluation
+            next_obs, reward, terminal, _ = self.eval_env.step(action) #next state predictions            
             
             episode_reward += reward
             episode_length += 1
 
             terminal_counter += 1
             acc, acc_1_off = self.eval_bcq(action, full_pl)
-            acc_total += acc
-            acc_1_off_total += acc_1_off
+            # acc_total += acc
+            # acc_1_off_total += acc_1_off
 
-            obs = next_obs.reshape(1,-1)
-
-            if terminal_counter == self._step_per_epoch:
-
+            if num_episodes == self._eval_episodes-1:
                 self.plot_predictions_rl(obs.reshape(1,90,12), next_state_gt.reshape(1,90,12), next_obs.reshape(1,90,12), action.reshape(1,90), full_pl.reshape(1,90), num_episodes)
+            
+            obs = self.eval_env.get_obs().reshape(1,-1)
+            #obs: (0,90) next_state_gt:(90,180) next_obs: (90,180), action: (90,180) act: (90,180)
+            if terminal_counter == self.terminal_counter:
+                #plot the last round
+                
                 eval_ep_info_buffer.append(
                     {"episode_reward": episode_reward,
                         "episode_length": episode_length,
-                        "episode_accurcy": acc_total/self._step_per_epoch, 
-                        "episode_1_off_accuracy": acc_1_off_total/self._step_per_epoch}
+                        "episode_accurcy": acc, 
+                        "episode_1_off_accuracy": acc_1_off}
                 )
                 terminal_counter = 0
                 episode_reward, episode_length = 0, 0
-                acc_total, acc_1_off_total = 0, 0
                 obs = self.eval_env.reset()
                 num_episodes +=1
 
                 print("episode_reward", episode_reward, 
                     "episode_length", episode_length,
-                    "episode_accuracy", acc_total/self._step_per_epoch, 
-                    "episode_1_off_accuracy", acc_1_off_total/self._step_per_epoch)
+                    "episode_accuracy", acc, 
+                    "episode_1_off_accuracy", acc_1_off)
                 
                 obs_.append(obs)
                 next_obs_.append(next_obs)
@@ -299,6 +305,8 @@ class Trainer:
                 full_action_.append(full_pl)
                 reward_.append(reward)
                 terminal_.append(terminal)
+
+                self.logger.print("EVAL TIME: {:.3f}s".format(time.time() - start_time))
 
                 
         action_ = self.eval_env.unnormalize(np.array(action_), idx=12)

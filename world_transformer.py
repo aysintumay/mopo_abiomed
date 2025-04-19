@@ -28,7 +28,7 @@ class WorldTransformer:
         self.path = args.path
         self.logger = logger
         self.args = args
-        self.device = args.device
+        self.device = util.device
 
         self.model = TimeSeriesTransformer(input_dim=self.args.seq_dim, output_dim=self.args.output_dim, dim_model=self.args.dim_model,
                                                 num_encoder_layers = self.args.encs, pl_shape = 10,
@@ -62,11 +62,11 @@ class WorldTransformer:
             self.model.train()
             total_loss = 0
             for src, pl, tgt in tqdm(self.train_loader):
-                src = src.to(self.args.device)
-                pl = pl.to(self.args.device)
+                src = src.to(self.device)
+                pl = pl.to(self.device)
                 optimizer.zero_grad()
                 output = self.model(src, pl)
-                loss = criterion(output, tgt.to(self.args.device))
+                loss = criterion(output, tgt.to(self.device))
                 loss.backward()
                 optimizer.step()
                 total_loss += loss.item()
@@ -131,11 +131,11 @@ class WorldTransformer:
                 outputs = []
                 input_i = src
                 for i in range(9):
-                    pl_i = pl[:, i*10:(i+1)*10].to(self.args.device)
+                    pl_i = pl[:, i*10:(i+1)*10].to(self.device)
                     output = self.trained_model(input_i, pl_i)
                     output_reshaped = output.reshape([output.shape[0], 11, 12])[:, 1:,:] #only take new predictions, ignore first datapoint
                     outputs.append(output_reshaped)
-                    input_i = torch.concat([input_i[:,10:,:].to(self.args.device), output_reshaped], axis=1)
+                    input_i = torch.concat([input_i[:,10:,:].to(self.device), output_reshaped], axis=1)
                 #64x90x6
                 pred = np.array(torch.concat(outputs, axis=1).detach().cpu())
                 # all_outputs.append(pred.detach().cpu())
@@ -205,7 +205,7 @@ class TimeSeriesTransformer(nn.Module):
         
         self.positional_encoding = self.create_positional_encoding(max_len, dim_model).to(self.device)
 
-        self.decoder = Decoder(input_size = dim_model+pl_shape, output_size = output_dim).to(self.device)
+        self.decoder = Decoder(input_size = dim_model+pl_shape, output_size = output_dim, dropout = decoder_dropout).to(self.device)
     
     def create_positional_encoding(self, max_len, dim_model):
         pe = torch.zeros(max_len, dim_model)

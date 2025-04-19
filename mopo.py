@@ -20,9 +20,12 @@ from common.buffer import ReplayBuffer
 from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
+from common import util
 
 import warnings
 warnings.filterwarnings("ignore")
+
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -34,7 +37,7 @@ def get_args():
     parser.add_argument("--model_path" , type=str, default="saved_models")
 
     parser.add_argument("--task", type=str, default="Abiomed-v0")
-    parser.add_argument("--seeds", type=int, nargs='+', default=[1, 2, 3])
+    parser.add_argument("--seeds", type=int, nargs='+', default=[2,3])
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -56,14 +59,16 @@ def get_args():
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1) #1000
-    parser.add_argument("--step-per-epoch", type=int, default=1) #1000
-    parser.add_argument("--eval_episodes", type=int, default=5)
+    parser.add_argument("--epoch", type=int, default=15) #1000
+    parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
+    parser.add_argument("--eval_episodes", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=256)
+    parser.add_argument("--terminal_counter", type=int, default=1) 
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--log-freq", type=int, default=1000)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--device_id", type=int, default=7)
+    parser.add_argument("--device_id", type=int, default=6)
+
     #world transformer arguments
     parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
                         help='Specify the sequence dimension.')
@@ -121,6 +126,7 @@ def main(args):
                 group=args.algo_name,
                 config=vars(args),
                 )
+    run = None
     results = []
     for seed in args.seeds:
         random.seed(seed)
@@ -132,7 +138,8 @@ def main(args):
 
         # log
         t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-        log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+        # log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+        log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
         log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
         model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
@@ -146,28 +153,35 @@ def main(args):
 
         args.model_path = model_path
         args.pretrained = False #to be fast
-        args.data_name = 'train'      
-        scaler_info = train(run, logger, seed, args)
+        args.data_name = 'train'
+       
+        if args.task == 'Abiomed-v0':
+            scaler_info, policy, trainer = train(run, logger, seed, args)
+            args.data_name = 'test'
+            args.pretrained = True
+            eval_info = test(trainer, policy, run, logger, model_logger, scaler_info, seed, args)
 
-        args.data_name = 'test'
-        eval_info, dset = test(run, logger, model_logger, scaler_info, seed, args)
-
+            #will integrate in get_eval function
+            mean_return = np.mean(eval_info["eval/episode_reward"])
+            std_return = np.std(eval_info["eval/episode_reward"])
+            mean_length = np.mean(eval_info["eval/episode_length"])
+            std_length = np.std(eval_info["eval/episode_length"])
+            results.append({
+                'seed': seed,
+                'mean_return': mean_return,
+                'std_return': std_return,
+                'mean_length': mean_length,
+                'std_length': std_length
+            })
+            
+            print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+        else:
+            policy, trainer = train(run, logger, seed, args)
+            trainer.algo.save_dynamics_model(f"dynamics_model")
+            results.append(evaluate_mbpo(policy, seed, trainer, args))
         
 
-
-        mean_return = np.mean(eval_info["eval/episode_reward"])
-        std_return = np.std(eval_info["eval/episode_reward"])
-        mean_length = np.mean(eval_info["eval/episode_length"])
-        std_length = np.std(eval_info["eval/episode_length"])
-        results.append({
-            'seed': seed,
-            'mean_return': mean_return,
-            'std_return': std_return,
-            'mean_length': mean_length,
-            'std_length': std_length
-        })
         
-        print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
     # Save results to CSV
     os.makedirs(os.path.join('results', args.task, 'mopo'), exist_ok=True)
     results_df = pd.DataFrame(results)
