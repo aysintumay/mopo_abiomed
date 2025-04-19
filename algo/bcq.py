@@ -54,7 +54,10 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     print('Loading buffer! total size:', N)
     for i in range(N-1):
         obs = dataset['observations'][i]
-        new_obs = dataset['observations'][i+1]
+        if args.task == 'Abiomed-v0':
+            new_obs = dataset['next_observations'][i]
+        else:
+            new_obs = dataset['observations'][i+1]
         action = dataset['actions'][i]
         reward = dataset['rewards'][i]
         done_bool = bool(dataset['terminals'][i])
