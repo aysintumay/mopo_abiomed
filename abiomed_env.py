@@ -12,8 +12,8 @@ class AbiomedEnv(gym.Env):
     def __init__(self, args=None, logger=None, scaler_info=None,):
         super(AbiomedEnv, self).__init__()
         # Replace obs_dim and action_dim with actual dimensions
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(12*90,), dtype=np.float32)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-7, high=20, shape=(12*90,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-2.39, high=1.38, shape=(1,), dtype=np.float32)
         self.id = 'Abiomed-v0'
     
         self.pretrained = args.pretrained
@@ -88,16 +88,16 @@ class AbiomedEnv(gym.Env):
             self.rwd_stds = train.std(axis=(0, 1))
             train_dict = generate_buffer(train)
 
-            if not os.path.exists('intermediate_data'):
-                os.makedirs('intermediate_data')
-            with open(os.path.join('intermediate_data',f'dataset_train_0.pkl'), 'wb') as f:
-                pickle.dump(train_dict, f)
+            # if not os.path.exists('intermediate_data'):
+            #     os.makedirs('intermediate_data')
+            # with open(os.path.join('intermediate_data',f'dataset_train_0.pkl'), 'wb') as f:
+            #     pickle.dump(train_dict, f)
             
         else:
             train = train[:, :, :-1]
             train_dict = generate_buffer(train)
-            with open(os.path.join('intermediate_data',f'dataset_test_0.pkl'), 'wb') as f:
-                pickle.dump(train_dict, f)
+            # with open(os.path.join('intermediate_data',f'dataset_test_0.pkl'), 'wb') as f:
+            #     pickle.dump(train_dict, f)
 
         return train_dict
     
