@@ -119,6 +119,7 @@ class Trainer:
                 while t.n < t.total:
                     if num_timesteps % self._rollout_freq == 0:
                         self.algo.rollout_transitions()
+                        # print(f'rollout done')
                     # update policy by sac
                     loss,q_values = self.algo.learn_policy()
                     q1_l.append(q_values['q1'])
@@ -294,10 +295,10 @@ class Trainer:
                 obs = self.eval_env.reset()
                 num_episodes +=1
 
-                print("episode_reward", episode_reward, 
-                    "episode_length", episode_length,
-                    "episode_accuracy", acc, 
-                    "episode_1_off_accuracy", acc_1_off)
+                # print("episode_reward", episode_reward, 
+                #     "episode_length", episode_length,
+                #     "episode_accuracy", acc, 
+                #     "episode_1_off_accuracy", acc_1_off)
                 
                 obs_.append(obs)
                 next_obs_.append(next_obs)
@@ -306,7 +307,7 @@ class Trainer:
                 reward_.append(reward)
                 terminal_.append(terminal)
 
-                self.logger.print("EVAL TIME: {:.3f}s".format(time.time() - start_time))
+                # self.logger.print("EVAL TIME: {:.3f}s".format(time.time() - start_time))
 
                 
         action_ = self.eval_env.unnormalize(np.array(action_), idx=12)

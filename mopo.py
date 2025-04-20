@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from algo.mbpo import evaluate as evaluate_mbpo
 from test import test
-from train import train, get_args
+from train import train
 from common.buffer import ReplayBuffer
 from common.logger import Logger
 from trainer import Trainer
@@ -35,6 +35,12 @@ def get_args():
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
     parser.add_argument("--policy_path" , type=str, default="")
     parser.add_argument("--model_path" , type=str, default="saved_models")
+    parser.add_argument(
+                    "--devid", 
+                    type=int,
+                    default=6,
+                    help="Which GPU device index to use"
+                )
 
     parser.add_argument("--task", type=str, default="Abiomed-v0")
     parser.add_argument("--seeds", type=int, nargs='+', default=[2,3])
@@ -51,23 +57,23 @@ def get_args():
     parser.add_argument("--dynamics-lr", type=float, default=0.001)
     parser.add_argument("--n-ensembles", type=int, default=7)
     parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=1.0) #1e=6
+    parser.add_argument("--reward-penalty-coef", type=float, default=1e-2) #1e=6
     parser.add_argument("--rollout-length", type=int, default=5) #1 
-    parser.add_argument("--rollout-batch-size", type=int, default=50000) #50000
+    parser.add_argument("--rollout-batch-size", type=int, default=10000) #50000
     parser.add_argument("--rollout-freq", type=int, default=1000)
     parser.add_argument("--model-retain-epochs", type=int, default=5)
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1) #1000
-    parser.add_argument("--step-per-epoch", type=int, default=1) #1000
-    parser.add_argument("--eval_episodes", type=int, default=1)
+    parser.add_argument("--epoch", type=int, default=1000) #1000
+    parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
+    parser.add_argument("--eval_episodes", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--terminal_counter", type=int, default=1) 
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--log-freq", type=int, default=1000)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--device_id", type=int, default=6)
+    
 
     #world transformer arguments
     parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
@@ -148,7 +154,7 @@ def main(args):
         logger = Logger(writer=writer,log_path=log_path)
         model_logger = Logger(writer=writer,log_path=model_path)
 
-        Devid = args.device_id if args.device == 'cuda' else -1
+        Devid = args.devid if args.device == 'cuda' else -1
         set_device_and_logger(Devid, logger, model_logger)
 
         args.model_path = model_path

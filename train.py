@@ -24,74 +24,74 @@ from common import util
 from abiomed_env import AbiomedEnv
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--algo-name", type=str, default="mopo")
-    parser.add_argument("--pretrained", type=bool, default=True)
+# def get_args():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--algo-name", type=str, default="mopo")
+#     parser.add_argument("--pretrained", type=bool, default=True)
     
-    parser.add_argument("--task", type=str, default="Abiomed-v0")
-    parser.add_argument("--seed", type=int, default=1)
+#     parser.add_argument("--task", type=str, default="Abiomed-v0")
+#     parser.add_argument("--seed", type=int, default=1)
     
-    # for running baselines
-    parser.add_argument("--seeds", type=int, nargs='+', default=[])
-    parser.add_argument("--baseline-logdir", type=str, default="results")
+#     # for running baselines
+#     parser.add_argument("--seeds", type=int, nargs='+', default=[])
+#     parser.add_argument("--baseline-logdir", type=str, default="results")
 
 
-    parser.add_argument("--actor-lr", type=float, default=3e-4)
-    parser.add_argument("--critic-lr", type=float, default=3e-4)
-    parser.add_argument("--gamma", type=float, default=0.99)
-    parser.add_argument("--tau", type=float, default=0.005)
-    parser.add_argument("--alpha", type=float, default=0.2)
-    parser.add_argument('--auto-alpha', default=True)
-    parser.add_argument('--target-entropy', type=int, default=-3) #-action_dim
-    parser.add_argument('--alpha-lr', type=float, default=3e-4)
+#     parser.add_argument("--actor-lr", type=float, default=3e-4)
+#     parser.add_argument("--critic-lr", type=float, default=3e-4)
+#     parser.add_argument("--gamma", type=float, default=0.99)
+#     parser.add_argument("--tau", type=float, default=0.005)
+#     parser.add_argument("--alpha", type=float, default=0.2)
+#     parser.add_argument('--auto-alpha', default=True)
+#     parser.add_argument('--target-entropy', type=int, default=-3) #-action_dim
+#     parser.add_argument('--alpha-lr', type=float, default=3e-4)
 
-    # dynamics model's arguments
-    parser.add_argument("--dynamics-lr", type=float, default=0.001)
-    parser.add_argument("--n-ensembles", type=int, default=7)
-    parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=1.0) #1e=6
-    parser.add_argument("--rollout-length", type=int, default=5) #1 
-    parser.add_argument("--rollout-batch-size", type=int, default=50000) #50000
-    parser.add_argument("--rollout-freq", type=int, default=1000)
-    parser.add_argument("--model-retain-epochs", type=int, default=5)
-    parser.add_argument("--real-ratio", type=float, default=0.05)
-    parser.add_argument("--dynamics-model-dir", type=str, default=None)
+#     # dynamics model's arguments
+#     parser.add_argument("--dynamics-lr", type=float, default=0.001)
+#     parser.add_argument("--n-ensembles", type=int, default=7)
+#     parser.add_argument("--n-elites", type=int, default=5)
+#     parser.add_argument("--reward-penalty-coef", type=float, default=1.0) #1e=6
+#     parser.add_argument("--rollout-length", type=int, default=5) #1 
+#     parser.add_argument("--rollout-batch-size", type=int, default=50000) #50000
+#     parser.add_argument("--rollout-freq", type=int, default=1000)
+#     parser.add_argument("--model-retain-epochs", type=int, default=5)
+#     parser.add_argument("--real-ratio", type=float, default=0.05)
+#     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1000) 
-    parser.add_argument("--step-per-epoch", type=int, default=1000)
-    parser.add_argument("--eval_episodes", type=int, default=10)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--logdir", type=str, default="log")
-    parser.add_argument("--log-freq", type=int, default=1000)
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+#     parser.add_argument("--epoch", type=int, default=1000) 
+#     parser.add_argument("--step-per-epoch", type=int, default=1000)
+#     parser.add_argument("--eval_episodes", type=int, default=10)
+#     parser.add_argument("--batch-size", type=int, default=256)
+#     parser.add_argument("--logdir", type=str, default="log")
+#     parser.add_argument("--log-freq", type=int, default=1000)
+#     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
 
-    #world transformer arguments
-    parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
-                        help='Specify the sequence dimension.')
-    parser.add_argument('-output_dim', '--output_dim', type=int, metavar='<dim>', default=11*12,
-                        help='Specify the sequence dimension.')
-    parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
-                        help='Specify the batch size.')
-    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
-                        help='Specify the number of epochs to train for.')
-    parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
-                help='Set the number of encoder layers.') 
-    parser.add_argument('-lr', '--lr', type=float, metavar='<size>', default=0.001,
-                        help='Specify the learning rate.')
-    parser.add_argument('-encoder_dropout', '--encoder_dropout', type=float, metavar='<size>', default=0.1,
-                help='Set the tunable dropout.')
-    parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0,
-                help='Set the tunable dropout.')
-    parser.add_argument('-dim_model', '--dim_model', type=int, metavar='<size>', default=256,
-                help='Set the number of encoder layers.')
-    parser.add_argument('-path', '--path', type=str, metavar='<cohort>', 
-                        default='/data/abiomed_tmp/processed',
-                        help='Specify the path to read data.')
-    return parser.parse_args()
+#     #world transformer arguments
+#     parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
+#                         help='Specify the sequence dimension.')
+#     parser.add_argument('-output_dim', '--output_dim', type=int, metavar='<dim>', default=11*12,
+#                         help='Specify the sequence dimension.')
+#     parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
+#                         help='Specify the batch size.')
+#     parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
+#                         help='Specify the number of epochs to train for.')
+#     parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
+#                 help='Set the number of encoder layers.') 
+#     parser.add_argument('-lr', '--lr', type=float, metavar='<size>', default=0.001,
+#                         help='Specify the learning rate.')
+#     parser.add_argument('-encoder_dropout', '--encoder_dropout', type=float, metavar='<size>', default=0.1,
+#                 help='Set the tunable dropout.')
+#     parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0,
+#                 help='Set the tunable dropout.')
+#     parser.add_argument('-dim_model', '--dim_model', type=int, metavar='<size>', default=256,
+#                 help='Set the number of encoder layers.')
+#     parser.add_argument('-path', '--path', type=str, metavar='<cohort>', 
+#                         default='/data/abiomed_tmp/processed',
+#                         help='Specify the path to read data.')
+#     return parser.parse_args()
 
 
-def train(run, logger, seed, args=get_args()):
+def train(run, logger, seed, args):
 
     # create env and dataset
     scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
@@ -205,6 +205,7 @@ def train(run, logger, seed, args=get_args()):
         model_buffer=model_buffer,
         reward_penalty_coef=args.reward_penalty_coef,
         rollout_length=args.rollout_length,
+        rollout_batch_size=args.rollout_batch_size,
         batch_size=args.batch_size,
         real_ratio=args.real_ratio,
         logger=logger,
@@ -270,7 +271,7 @@ if __name__ == "__main__":
     writer.add_text("args", str(args))
     logger = Logger(writer=writer,log_path=log_path)
 
-    Devid = args.device_id if args.device == 'cuda' else -1
+    Devid = args.deviceid if args.device == 'cuda' else -1
     set_device_and_logger(Devid,logger)
 
     run = None # no wandb for baselines

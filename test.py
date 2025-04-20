@@ -23,69 +23,69 @@ from trainer import Trainer,plot_accuracy
 from common.util import set_device_and_logger
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--algo-name", type=str, default="mopo")
-    # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
-    parser.add_argument("--policy_path" , type=str, default="log/halfcheetah_medium_plot/mopo/seed_5_0403_230811-halfcheetah_medium_replay_v0_mopo/policy_halfcheetah-medium-replay-v0.pth")
+# def get_args():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--algo-name", type=str, default="mopo")
+#     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
+#     parser.add_argument("--policy_path" , type=str, default="log/halfcheetah_medium_plot/mopo/seed_5_0403_230811-halfcheetah_medium_replay_v0_mopo/policy_halfcheetah-medium-replay-v0.pth")
     
-    parser.add_argument("--task", type=str, default="halfcheetah-medium-v2")
-    parser.add_argument("--seed", type=int, default=1)
-    parser.add_argument("--actor-lr", type=float, default=3e-4)
-    parser.add_argument("--critic-lr", type=float, default=3e-4)
-    parser.add_argument("--gamma", type=float, default=0.99)
-    parser.add_argument("--tau", type=float, default=0.005)
-    parser.add_argument("--alpha", type=float, default=0.2)
-    parser.add_argument('--auto-alpha', default=True)
-    parser.add_argument('--target-entropy', type=int, default=-1) #-actio_dim
-    parser.add_argument('--alpha-lr', type=float, default=3e-4)
+#     parser.add_argument("--task", type=str, default="halfcheetah-medium-v2")
+#     parser.add_argument("--seed", type=int, default=1)
+#     parser.add_argument("--actor-lr", type=float, default=3e-4)
+#     parser.add_argument("--critic-lr", type=float, default=3e-4)
+#     parser.add_argument("--gamma", type=float, default=0.99)
+#     parser.add_argument("--tau", type=float, default=0.005)
+#     parser.add_argument("--alpha", type=float, default=0.2)
+#     parser.add_argument('--auto-alpha', default=True)
+#     parser.add_argument('--target-entropy', type=int, default=-1) #-actio_dim
+#     parser.add_argument('--alpha-lr', type=float, default=3e-4)
 
-    # dynamics model's arguments
-    parser.add_argument("--dynamics-lr", type=float, default=0.001)
-    parser.add_argument("--n-ensembles", type=int, default=7)
-    parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=1.0) #1e=6
-    parser.add_argument("--rollout-length", type=int, default=5) #1 
-    parser.add_argument("--rollout-batch-size", type=int, default=5000) #50000
-    parser.add_argument("--rollout-freq", type=int, default=1000)
-    parser.add_argument("--model-retain-epochs", type=int, default=5)
-    parser.add_argument("--real-ratio", type=float, default=0.05)
-    parser.add_argument("--dynamics-model-dir", type=str, default=None)
+#     # dynamics model's arguments
+#     parser.add_argument("--dynamics-lr", type=float, default=0.001)
+#     parser.add_argument("--n-ensembles", type=int, default=7)
+#     parser.add_argument("--n-elites", type=int, default=5)
+#     parser.add_argument("--reward-penalty-coef", type=float, default=1.0) #1e=6
+#     parser.add_argument("--rollout-length", type=int, default=5) #1 
+#     parser.add_argument("--rollout-batch-size", type=int, default=5000) #50000
+#     parser.add_argument("--rollout-freq", type=int, default=1000)
+#     parser.add_argument("--model-retain-epochs", type=int, default=5)
+#     parser.add_argument("--real-ratio", type=float, default=0.05)
+#     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1) #1000
-    parser.add_argument("--step-per-epoch", type=int, default=1000)
-    parser.add_argument("--eval_episodes", type=int, default=3)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--logdir", type=str, default="log")
-    parser.add_argument("--log-freq", type=int, default=1000)
-    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+#     parser.add_argument("--epoch", type=int, default=1) #1000
+#     parser.add_argument("--step-per-epoch", type=int, default=1000)
+#     parser.add_argument("--eval_episodes", type=int, default=3)
+#     parser.add_argument("--batch-size", type=int, default=256)
+#     parser.add_argument("--logdir", type=str, default="log")
+#     parser.add_argument("--log-freq", type=int, default=1000)
+#     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
 
-    #world transformer arguments
-    parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
-                        help='Specify the sequence dimension.')
-    parser.add_argument('-output_dim', '--output_dim', type=int, metavar='<dim>', default=11*12,
-                        help='Specify the sequence dimension.')
-    parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
-                        help='Specify the batch size.')
-    parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
-                        help='Specify the number of epochs to train for.')
-    parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
-                help='Set the number of encoder layers.') 
-    parser.add_argument('-lr', '--lr', type=float, metavar='<size>', default=0.001,
-                        help='Specify the learning rate.')
-    parser.add_argument('-encoder_dropout', '--encoder_dropout', type=float, metavar='<size>', default=0.1,
-                help='Set the tunable dropout.')
-    parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0,
-                help='Set the tunable dropout.')
-    parser.add_argument('-dim_model', '--dim_model', type=int, metavar='<size>', default=256,
-                help='Set the number of encoder layers.')
-    parser.add_argument('-path', '--path', type=str, metavar='<cohort>', 
-                        default='/data/abiomed_tmp/processed',
-                        help='Specify the path to read data.')
-    return parser.parse_args()
+#     #world transformer arguments
+#     parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
+#                         help='Specify the sequence dimension.')
+#     parser.add_argument('-output_dim', '--output_dim', type=int, metavar='<dim>', default=11*12,
+#                         help='Specify the sequence dimension.')
+#     parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
+#                         help='Specify the batch size.')
+#     parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
+#                         help='Specify the number of epochs to train for.')
+#     parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
+#                 help='Set the number of encoder layers.') 
+#     parser.add_argument('-lr', '--lr', type=float, metavar='<size>', default=0.001,
+#                         help='Specify the learning rate.')
+#     parser.add_argument('-encoder_dropout', '--encoder_dropout', type=float, metavar='<size>', default=0.1,
+#                 help='Set the tunable dropout.')
+#     parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0,
+#                 help='Set the tunable dropout.')
+#     parser.add_argument('-dim_model', '--dim_model', type=int, metavar='<size>', default=256,
+#                 help='Set the number of encoder layers.')
+#     parser.add_argument('-path', '--path', type=str, metavar='<cohort>', 
+#                         default='/data/abiomed_tmp/processed',
+#                         help='Specify the path to read data.')
+#     return parser.parse_args()
 
 
-def get_eval(policy, env, logger, trainer, args,):
+def get_eval(policy, env, logger, trainer, args):
 
     reward_l, acc_l, off_acc = [], [], []
     reward_std_l, acc_std_l, off_acc_std = [], [], []
@@ -96,8 +96,8 @@ def get_eval(policy, env, logger, trainer, args,):
     if args.task == 'Abiomed-v0':
         eval_info,dset = trainer.evaluate()
         #to plot the results
-        with open(os.path.join('intermediate_data',f'dataset_test_1.pkl'), 'wb') as f:
-            pickle.dump(dset, f)
+        # with open(os.path.join('intermediate_data',f'dataset_test_1.pkl'), 'wb') as f:
+        #     pickle.dump(dset, f)
     else:
         eval_info, _ = trainer._evaluate()
     ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
@@ -141,7 +141,7 @@ def get_eval(policy, env, logger, trainer, args,):
     
     
 
-def test(trainer, sac_policy, run, logger, model_logger, norm_info, seed, args=get_args()):
+def test(trainer, sac_policy, run, logger, model_logger, norm_info, seed, args):
 
 
     # create env and dataset

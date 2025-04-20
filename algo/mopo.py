@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import torch
+import time
 
 from common.functional import dict_batch_generator
 
@@ -14,11 +15,12 @@ class MOPO:
             model_buffer,
             reward_penalty_coef,
             rollout_length,
+            rollout_batch_size,
             batch_size,
             real_ratio,
             logger,
             model_batch_size=256,
-            rollout_batch_size=50000,
+            # rollout_batch_size=50000,
             rollout_mini_batch_size=1000,
             model_retain_epochs=1,
             num_env_steps_per_epoch=1000,
@@ -57,11 +59,14 @@ class MOPO:
     def rollout_transitions(self):
         init_transitions = self._sample_initial_transitions()
         # rollout
+        # print(self._rollout_batch_size, self._rollout_length)
         observations = init_transitions["observations"]
         for _ in range(self._rollout_length):
             actions = self.policy.sample_action(observations)
-
+            starttime = time.time()
             next_observations, rewards, terminals, infos = self.dynamics_model.predict(observations, actions)
+            # print(next_observations.shape, rewards.shape)
+            # print(f'ended transiton rollout prediction, {time.time()-starttime}' )
             self.model_buffer.add_batch(observations, next_observations, actions, rewards, terminals)
             nonterm_mask = (~terminals).flatten()
             if nonterm_mask.sum() == 0:

@@ -1,0 +1,23 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.136060
+loss/model_eval_mse_loss: 0.133450
+loss/model_eval_mse_loss: 0.130811
+loss/model_eval_mse_loss: 0.131055
+loss/model_eval_mse_loss: 0.127062
+loss/model_eval_mse_loss: 0.126184
+loss/model_eval_mse_loss: 0.123327
+loss/model_eval_mse_loss: 0.122863
+loss/model_eval_mse_loss: 0.121878
+loss/model_eval_mse_loss: 0.121170
+loss/model_eval_mse_loss: 0.123283
+loss/model_eval_mse_loss: 0.119583
+loss/model_eval_mse_loss: 0.125739
+loss/model_eval_mse_loss: 0.122048
+loss/model_eval_mse_loss: 0.120679
+loss/model_eval_mse_loss: 0.120665
+loss/model_eval_mse_loss: 0.120177
+loss/model_eval_mse_loss: 0.121561
+loss/model_eval_mse_loss: 0.120539
+total time: 128.666s
+Epoch #10: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.000 ± 0.000,                                    episode_1_off_accuracy: 0.000 ± 0.000
+Epoch #10: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000

@@ -150,6 +150,7 @@ class AbiomedEnv(gym.Env):
         action_ = []
         reward_ = []
         done_ = []
+        full_action_ = []
 
         # The newer version of the dataset adds an explicit
         # timeouts field. Keep old method for backwards compatability.
@@ -163,6 +164,7 @@ class AbiomedEnv(gym.Env):
             obs = dataset['observations'][i, :90, :12].flatten()
             new_obs = dataset['observations'][i, 90:, :12].flatten()
             action = dataset['actions'][i].astype(np.float32)
+            full_action = dataset['full_actions'][i].astype(np.float32)
             reward = dataset['rewards'][i].astype(np.float32)
             done_bool = bool(dataset['terminals'][i])
 
@@ -180,6 +182,7 @@ class AbiomedEnv(gym.Env):
             obs_.append(obs)
             next_obs_.append(new_obs)
             action_.append(action)
+            full_action_.append(full_action)
             reward_.append(reward)
             done_.append(done_bool)
             episode_step += 1
@@ -187,6 +190,7 @@ class AbiomedEnv(gym.Env):
         return {
             'observations': np.array(obs_),
             'actions': np.array(action_),
+            'full_actions': np.array(full_action_),
             'next_observations': np.array(next_obs_),
             'rewards': np.array(reward_),
             'terminals': np.array(done_),
