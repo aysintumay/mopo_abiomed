@@ -27,7 +27,7 @@ class AbiomedEnv(gym.Env):
 
         self.world_model = WorldTransformer(args = self.args, logger = self.logger, pretrained = self.pretrained)
         # self.trained_world_model = self.world_model.load_model()
-        self.data = self.load_data()
+        self.data = self.qlearning_dataset()
         self.current_index = 0
 
     def load_data(self):
@@ -158,12 +158,10 @@ class AbiomedEnv(gym.Env):
             use_timeouts = True
 
         episode_step = 0
-        for i in range(N-1):
+        for i in range(N):
 
             obs = dataset['observations'][i, :90, :12].flatten()
             new_obs = dataset['observations'][i, 90:, :12].flatten()
-            # obs = dataset['observations'][i].astype(np.float32)
-            # new_obs = dataset['observations'][i+1].astype(np.float32)
             action = dataset['actions'][i].astype(np.float32)
             reward = dataset['rewards'][i].astype(np.float32)
             done_bool = bool(dataset['terminals'][i])
@@ -211,8 +209,8 @@ class AbiomedEnv(gym.Env):
             info (dict): contains auxiliary diagnostic information (helpful for debugging, logging, and sometimes learning)
         """
 
-        obs = self.data['next_observations'][self.current_index]
-        next_state = self.data['observations'][self.current_index]
+        next_state = self.data['next_observations'][self.current_index]
+        obs = self.data['observations'][self.current_index]
             
         dataloder = self.world_model.resize(obs, action, next_state)
         next_obs = self.world_model.predict(dataloder)
