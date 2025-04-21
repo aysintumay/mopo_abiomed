@@ -27,7 +27,7 @@ class AbiomedEnv(gym.Env):
 
         self.world_model = WorldTransformer(args = self.args, logger = self.logger, pretrained = self.pretrained)
         # self.trained_world_model = self.world_model.load_model()
-        self.data = self.load_data()
+        self.data = self.qlearning_dataset()
         self.current_index = 0
 
     def load_data(self):
@@ -150,6 +150,7 @@ class AbiomedEnv(gym.Env):
         action_ = []
         reward_ = []
         done_ = []
+        full_action_ = []
 
         # The newer version of the dataset adds an explicit
         # timeouts field. Keep old method for backwards compatability.
@@ -158,13 +159,12 @@ class AbiomedEnv(gym.Env):
             use_timeouts = True
 
         episode_step = 0
-        for i in range(N-1):
+        for i in range(N):
 
             obs = dataset['observations'][i, :90, :12].flatten()
             new_obs = dataset['observations'][i, 90:, :12].flatten()
-            # obs = dataset['observations'][i].astype(np.float32)
-            # new_obs = dataset['observations'][i+1].astype(np.float32)
             action = dataset['actions'][i].astype(np.float32)
+            full_action = dataset['full_actions'][i].astype(np.float32)
             reward = dataset['rewards'][i].astype(np.float32)
             done_bool = bool(dataset['terminals'][i])
 
@@ -182,6 +182,7 @@ class AbiomedEnv(gym.Env):
             obs_.append(obs)
             next_obs_.append(new_obs)
             action_.append(action)
+            full_action_.append(full_action)
             reward_.append(reward)
             done_.append(done_bool)
             episode_step += 1
@@ -189,6 +190,7 @@ class AbiomedEnv(gym.Env):
         return {
             'observations': np.array(obs_),
             'actions': np.array(action_),
+            'full_actions': np.array(full_action_),
             'next_observations': np.array(next_obs_),
             'rewards': np.array(reward_),
             'terminals': np.array(done_),
@@ -211,8 +213,8 @@ class AbiomedEnv(gym.Env):
             info (dict): contains auxiliary diagnostic information (helpful for debugging, logging, and sometimes learning)
         """
 
-        obs = self.data['next_observations'][self.current_index]
-        next_state = self.data['observations'][self.current_index]
+        next_state = self.data['next_observations'][self.current_index]
+        obs = self.data['observations'][self.current_index]
             
         dataloder = self.world_model.resize(obs, action, next_state)
         next_obs = self.world_model.predict(dataloder)

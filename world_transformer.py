@@ -122,13 +122,17 @@ class WorldTransformer:
         #dont take the p-level into the observation space
         x = obs.reshape(n,90,self.seq_dim)
         y = next_state.reshape((n, 90*self.seq_dim))
-        action = action.reshape(-1,90)
-        loader = DataLoader(TimeSeriesDataset(x, action, y), batch_size=self.bc, shuffle=False)
+        a = action.flatten()
+        if a.size == 1:
+            # make an array of length n*90, all equal to that scalar
+            a = np.full((n * 90,), a[0])
+        action_seq = a.reshape(n, 90)
+        loader = DataLoader(TimeSeriesDataset(x, action_seq, y), batch_size=self.bc, shuffle=False)
         return loader
     
     def load_model(self):
         # Load the model state dict
-        self.model.load_state_dict(torch.load(os.path.join('/data/models/world_model', f"checkpoint_epoch_{self.args.task}_{self.nepochs}.pth")))
+        self.model.load_state_dict(torch.load(os.path.join('/data/abiomed_tmp/models/world_model', f"checkpoint_epoch_{self.args.task}_{self.nepochs}.pth")))
         return self.model.to(self.device)
     
     def predict(self, obs_loader):

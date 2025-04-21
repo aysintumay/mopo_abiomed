@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
 from datetime import datetime
+from torch.utils.tensorboard import SummaryWriter
 import gym
 import d4rl
 
@@ -14,6 +15,8 @@ import d4rl
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.policy_models import MLP, DiagGaussian, BasicActor
+from common.logger import Logger
+from common.util import set_device_and_logger
 
 # run command in the mopo_abiomed directory: 
 # python algo/bc.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BC --epochs 25 --device_id 5
@@ -27,9 +30,12 @@ def get_args():
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--logdir", type=str, default="results")
+    parser.add_argument("--logdir", type=str, default="log")
+    parser.add_argument("--resultsdir", type=str, default="results")
+    parser.add_argument("--data-name", type=str, default="train")
     parser.add_argument("--pretrained", type=bool, default=True)
     parser.add_argument("--device_id", type=int, default=0)
+    parser.add_argument("--algo-name", type=str, default="bc")
     return parser.parse_args()
 
 class BehaviorCloning:
@@ -38,13 +44,15 @@ class BehaviorCloning:
         self.device = torch.device(f"cuda:{args.device_id}" if args.device == "cuda" else "cpu")
         
         # Create environment and get dataset
+        scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
         if args.task == "Abiomed-v0":
             gym.envs.registration.register(
                 id='Abiomed-v0',
                 entry_point='abiomed_env:AbiomedEnv',
                 max_episode_steps=1000,
             )
-            self.env = gym.make(args.task, args=args, data_name="train", pretrained=args.pretrained)
+            kwargs = {"args": args, 'scaler_info': scaler_info}
+            self.env = gym.make(args.task, **kwargs)
         else:
             self.env = gym.make(args.task)
         
@@ -85,6 +93,10 @@ class BehaviorCloning:
                 batch_idx = indices[i * self.args.batch_size:(i + 1) * self.args.batch_size]
                 obs_batch = self.obs[batch_idx]
                 actions_batch = self.actions[batch_idx]
+
+                if self.args.task == "Abiomed-v0":
+                    obs_batch = obs_batch[:, :90, :]  # trim to 90 timesteps
+                    obs_batch = obs_batch.reshape(obs_batch.size(0), -1)  # flatten per sample
                 
                 self.optimizer.zero_grad()
                 action, _ = self.model(obs_batch)
@@ -104,27 +116,44 @@ class BehaviorCloning:
 
     def evaluate(self, eval_episodes=15):
         self.model.eval()
-        obs = self.env.reset()
+        raw_obs = self.env.reset()
+        if self.args.task == "Abiomed-v0":
+            # raw_obs is (90,12), flatten to (1080,)
+            obs = raw_obs.reshape(-1)
+        else:
+            obs = raw_obs
+
         eval_ep_info_buffer = []
         num_episodes = 0
         episode_reward, episode_length = 0, 0
 
         while num_episodes < eval_episodes:
             action = self.model.sample_action(obs, deterministic=True)
-            next_obs, reward, terminal, _ = self.env.step(action)
+
+            next_raw_obs, reward, terminal, _ = self.env.step(action)
             episode_reward += reward
             episode_length += 1
 
-            obs = next_obs
+            if self.args.task == "Abiomed-v0":
+                obs = next_raw_obs.reshape(-1)
+            else:
+                obs = next_raw_obs
 
             if terminal:
-                eval_ep_info_buffer.append(
-                    {"episode_reward": episode_reward, "episode_length": episode_length}
-                )
-                num_episodes +=1
+                eval_ep_info_buffer.append({
+                    "episode_reward": episode_reward,
+                    "episode_length": episode_length
+                })
+                num_episodes += 1
                 episode_reward, episode_length = 0, 0
-                obs = self.env.reset()
-        
+
+                # reset and re‑flatten
+                raw_obs = self.env.reset()
+                if self.args.task == "Abiomed-v0":
+                    obs = raw_obs.reshape(-1)
+                else:
+                    obs = raw_obs
+
         return {
             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
             "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
@@ -160,6 +189,17 @@ def main():
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
 
+        log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+        log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+        model_path = os.path.join(args.model_dir, args.task, args.algo_name, log_file)
+        writer = SummaryWriter(log_path)
+        writer.add_text("args", str(args))
+        logger = Logger(writer=writer,log_path=log_path)
+        model_logger = Logger(writer=writer,log_path=model_path)
+        
+        Devid = args.device_id if args.device == 'cuda' else -1
+        set_device_and_logger(Devid, logger, model_logger)
+
         bc = BehaviorCloning(args)
         bc.train()        
         # Save model
@@ -184,9 +224,9 @@ def main():
         print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
 
     # Save results to CSV
-    os.makedirs(os.path.join(args.logdir, args.task, "bc"), exist_ok=True)
+    os.makedirs(os.path.join(args.resultsdir, args.task, "bc"), exist_ok=True)
     results_df = pd.DataFrame(results)
-    results_path = os.path.join(args.logdir, args.task, "bc", f"bc_results_{t0}.csv")
+    results_path = os.path.join(args.resultsdir, args.task, "bc", f"bc_results_{t0}.csv")
     results_df.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
 
