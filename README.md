@@ -66,6 +66,15 @@ Change the path of the dynamics model in model.transition_model.load_model()
 
 After training with different seeds;
 
+## Evaluate
+
+Evaluate the saved models for 1000 episodes.
+TODO: Add model function and argument function for BC and BCQ
+```
+python evaluate.py --algo-name 'mopo' --task "Abiomed-v0" --policy_path 'your_path' --eval_episodes 1000 
+python evaluate.py --algo-name 'mbpo' --task "Abiomed-v0" --policy_path 'your_path' --reward-penalty-coef 0 --eval_episodes 1000 
+
+```
 
 ## Test
 ```
