@@ -272,7 +272,7 @@ if __name__ == "__main__":
                     help="Which GPU device index to use"
                 )
 
-    parser.add_argument("--seeds", type=int, nargs='+', default=[1,2])
+    parser.add_argument("--seeds", type=int, nargs='+', default=[1])
     
     parser.add_argument("--eval_episodes", type=int, default=10)
     
@@ -316,59 +316,59 @@ if __name__ == "__main__":
     #     bc_args(parser)
     args = parser.parse_args()
 
-    
+    seed = args.seed
     results = []
-    for seed in args.seeds:
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+    # for seed in args.seeds:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
-        t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-        log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-        # log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
-        log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+    t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
+    log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+    # log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
+    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
-        model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
-        writer = SummaryWriter(log_path)
-        writer.add_text("args", str(args))
-        logger = Logger(writer=writer,log_path=log_path)
-        model_logger = Logger(writer=writer,log_path=model_path)
+    model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
+    writer = SummaryWriter(log_path)
+    writer.add_text("args", str(args))
+    logger = Logger(writer=writer,log_path=log_path)
+    model_logger = Logger(writer=writer,log_path=model_path)
 
-        Devid = args.devid if args.device == 'cuda' else -1
-        set_device_and_logger(Devid, logger, model_logger)
+    Devid = args.devid if args.device == 'cuda' else -1
+    set_device_and_logger(Devid, logger, model_logger)
 
-     
-        #if you saved the whole model: policy = torch.load(os.path.join(model_logger.log_path, f'policy_{args.task}.pth'))
-        env = get_env() 
-        #if you saved the state_dict define the model class and load the model : write your own function
-        policy = get_mopo()
-        #change the policy path
-        #load the state_dict and model
-        policy_state_dict = torch.load(args.policy_path, map_location=f'cuda:{args.devid}')
-        policy.load_state_dict(policy_state_dict)
+    
+    #if you saved the whole model: policy = torch.load(os.path.join(model_logger.log_path, f'policy_{args.task}.pth'))
+    env = get_env() 
+    #if you saved the state_dict define the model class and load the model : write your own function
+    policy = get_mopo()
+    #change the policy path
+    #load the state_dict and model
+    policy_state_dict = torch.load(args.policy_path, map_location=f'cuda:{args.devid}')
+    policy.load_state_dict(policy_state_dict)
 
-        eval_info = evaluate(policy, env, args.eval_episodes, args.terminal_counter) 
-        mean_return = np.mean(eval_info["eval/episode_reward"])
-        std_return = np.std(eval_info["eval/episode_reward"])
-        mean_length = np.mean(eval_info["eval/episode_length"])
-        std_length = np.std(eval_info["eval/episode_length"])
-        mean_accuracy = np.mean(eval_info["eval/episode_accuracy"])
-        std_accuracy = np.std(eval_info["eval/episode_accuracy"])
-        mean_1_off_accuracy = np.mean(eval_info["eval/episode_1_off_accuracy"])
-        std_1_off_accuracy = np.std(eval_info["eval/episode_1_off_accuracy"])
-        results.append({
-            'seed': seed,
-            'mean_return': mean_return,
-            'std_return': std_return,
-            'mean_length': mean_length,
-            'std_length': std_length,
-            'mean_accuracy': mean_accuracy,
-            'std_accuracy': std_accuracy,
-            'mean_1_off_accuracy': mean_1_off_accuracy,
-            'std_1_off_accuracy': std_1_off_accuracy,
-        })
-        
-        print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+    eval_info = evaluate(policy, env, args.eval_episodes, args.terminal_counter) 
+    mean_return = np.mean(eval_info["eval/episode_reward"])
+    std_return = np.std(eval_info["eval/episode_reward"])
+    mean_length = np.mean(eval_info["eval/episode_length"])
+    std_length = np.std(eval_info["eval/episode_length"])
+    mean_accuracy = np.mean(eval_info["eval/episode_accuracy"])
+    std_accuracy = np.std(eval_info["eval/episode_accuracy"])
+    mean_1_off_accuracy = np.mean(eval_info["eval/episode_1_off_accuracy"])
+    std_1_off_accuracy = np.std(eval_info["eval/episode_1_off_accuracy"])
+    results.append({
+        # 'seed': seed,
+        'mean_return': mean_return,
+        'std_return': std_return,
+        'mean_length': mean_length,
+        'std_length': std_length,
+        'mean_accuracy': mean_accuracy,
+        'std_accuracy': std_accuracy,
+        'mean_1_off_accuracy': mean_1_off_accuracy,
+        'std_1_off_accuracy': std_1_off_accuracy,
+    })
+    
+    print(f"Mean Return: {mean_return:.2f} ± {std_return:.2f}")
     # Save results to CSV
     os.makedirs(os.path.join('results', args.task, args.algo_name), exist_ok=True)
     results_df = pd.DataFrame(results)
