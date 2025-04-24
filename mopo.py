@@ -38,12 +38,12 @@ def get_args():
     parser.add_argument(
                     "--devid", 
                     type=int,
-                    default=6,
+                    default=0,
                     help="Which GPU device index to use"
                 )
 
     parser.add_argument("--task", type=str, default="Abiomed-v0")
-    parser.add_argument("--seeds", type=int, nargs='+', default=[2,3])
+    parser.add_argument("--seeds", type=int, nargs='+', default=[1,2,3])
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -65,7 +65,7 @@ def get_args():
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1000) #1000
+    parser.add_argument("--epoch", type=int, default=600) #1000
     parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
     parser.add_argument("--eval_episodes", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=256)
@@ -90,7 +90,7 @@ def get_args():
                         help='Specify the learning rate.')
     parser.add_argument('-encoder_dropout', '--encoder_dropout', type=float, metavar='<size>', default=0.1,
                 help='Set the tunable dropout.')
-    parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0,
+    parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0.1,
                 help='Set the tunable dropout.')
     parser.add_argument('-dim_model', '--dim_model', type=int, metavar='<size>', default=256,
                 help='Set the number of encoder layers.')
@@ -172,12 +172,21 @@ def main(args):
             std_return = np.std(eval_info["eval/episode_reward"])
             mean_length = np.mean(eval_info["eval/episode_length"])
             std_length = np.std(eval_info["eval/episode_length"])
+            mean_accuracy = np.mean(eval_info["eval/episode_accuracy"])
+            std_accuracy = np.std(eval_info["eval/episode_accuracy"])
+            mean_1_off_accuracy = np.mean(eval_info["eval/episode_1_off_accuracy"])
+            std_1_off_accuracy = np.std(eval_info["eval/episode_1_off_accuracy"])
             results.append({
                 'seed': seed,
                 'mean_return': mean_return,
                 'std_return': std_return,
                 'mean_length': mean_length,
-                'std_length': std_length
+                'std_length': std_length,
+                'mean_accuracy': mean_accuracy,
+                'std_accuracy': std_accuracy,
+                'mean_1_off_accuracy': mean_1_off_accuracy,
+                'std_1_off_accuracy': std_1_off_accuracy,
+
             })
             
             print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
@@ -189,9 +198,9 @@ def main(args):
 
         
     # Save results to CSV
-    os.makedirs(os.path.join('results', args.task, 'mopo'), exist_ok=True)
+    os.makedirs(os.path.join('results', args.task, args.algo_name), exist_ok=True)
     results_df = pd.DataFrame(results)
-    results_path = os.path.join('results', args.task, 'mopo', f"{args.task}_results_{t0}.csv")
+    results_path = os.path.join('results', args.task, args.algo_name, f"{args.task}_results_{t0}.csv")
     results_df.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
 

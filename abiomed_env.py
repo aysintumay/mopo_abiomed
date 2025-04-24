@@ -31,7 +31,6 @@ class AbiomedEnv(gym.Env):
         self.current_index = 0
 
     def load_data(self):
-        # Implement your data loading logic here.
 
         def generate_buffer(data, length=90):
 

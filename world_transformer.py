@@ -102,7 +102,7 @@ class WorldTransformer:
         dta = dta[: ,:, :-1]
         self.rwd_mean = dta.mean(axis=(0, 1))
         self.rwd_std = dta.std(axis=(0, 1))
-        horizon = int(self.output_dim/12-1)
+        horizon = int(self.output_dim/self.seq_dim-1)
         if mode == 'test':
             dta = torch.load(os.path.join(self.path, 'pp_test_amicgs.pt')).numpy()
             dta = dta[: ,:, :-1]
@@ -267,7 +267,7 @@ class TimeSeriesTransformer(nn.Module):
             for i in range(9):
                 pl_i = pl[:, i*10:(i+1)*10]
                 output = self.forward(input_i, pl_i)
-                output_reshaped = output.reshape([output.shape[0], 11, 6])[:, 1:,:] #only take new predictions, ignore first datapoint
+                output_reshaped = output.reshape([output.shape[0], 11, ])[:, 1:,:] #only take new predictions, ignore first datapoint
                 outputs.append(output_reshaped)
                 input_i = torch.concat([input_i[:,10:,:], output_reshaped], axis=1)
     

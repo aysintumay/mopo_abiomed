@@ -219,7 +219,6 @@ def train(run, logger, seed, args):
     # create trainer
     trainer = Trainer(
         algo,
-        # world_model,
         eval_env=env,
         epoch=args.epoch,
         step_per_epoch=args.step_per_epoch,
@@ -271,7 +270,7 @@ if __name__ == "__main__":
     writer.add_text("args", str(args))
     logger = Logger(writer=writer,log_path=log_path)
 
-    Devid = args.deviceid if args.device == 'cuda' else -1
+    Devid = args.devid if args.device == 'cuda' else -1
     set_device_and_logger(Devid,logger)
 
     run = None # no wandb for baselines

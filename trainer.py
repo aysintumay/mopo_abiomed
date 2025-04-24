@@ -244,8 +244,6 @@ class Trainer:
         eval_ep_info_buffer = []
         num_episodes = 0
         episode_reward, episode_length = 0, 0
-        # acc_total = 0
-        # acc_1_off_total = 0
         obs_ = []
         next_obs_ = []
         action_ = []
@@ -273,13 +271,11 @@ class Trainer:
 
             terminal_counter += 1
             acc, acc_1_off = self.eval_bcq(action, full_pl)
-            # acc_total += acc
-            # acc_1_off_total += acc_1_off
-
+           
             if num_episodes == self._eval_episodes-1:
                 self.plot_predictions_rl(obs.reshape(1,90,12), next_state_gt.reshape(1,90,12), next_obs.reshape(1,90,12), action.reshape(1,90), full_pl.reshape(1,90), num_episodes)
             
-            obs = self.eval_env.get_obs().reshape(1,-1)
+            
             #obs: (0,90) next_state_gt:(90,180) next_obs: (90,180), action: (90,180) act: (90,180)
             if terminal_counter == self.terminal_counter:
                 #plot the last round
@@ -292,7 +288,7 @@ class Trainer:
                 )
                 terminal_counter = 0
                 episode_reward, episode_length = 0, 0
-                obs = self.eval_env.reset()
+                # obs = self.eval_env.reset()
                 num_episodes +=1
 
                 # print("episode_reward", episode_reward, 
@@ -308,9 +304,10 @@ class Trainer:
                 terminal_.append(terminal)
 
                 # self.logger.print("EVAL TIME: {:.3f}s".format(time.time() - start_time))
-
+            obs = self.eval_env.get_obs().reshape(1,-1)
                 
         action_ = self.eval_env.unnormalize(np.array(action_), idx=12)
+        full_action_ = self.eval_env.unnormalize(np.array(full_action_), idx=12).reshape(-1,90)
         dataset = {
                 'observations': np.array(obs_),
                 'actions': np.array(action_).reshape(-1, 1),  # Reshape to ensure it's 2D

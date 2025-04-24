@@ -1,0 +1,143 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.136060
+loss/model_eval_mse_loss: 0.133450
+loss/model_eval_mse_loss: 0.130811
+loss/model_eval_mse_loss: 0.131055
+loss/model_eval_mse_loss: 0.127062
+loss/model_eval_mse_loss: 0.126184
+loss/model_eval_mse_loss: 0.123327
+loss/model_eval_mse_loss: 0.122863
+loss/model_eval_mse_loss: 0.121878
+loss/model_eval_mse_loss: 0.121170
+loss/model_eval_mse_loss: 0.123283
+loss/model_eval_mse_loss: 0.119583
+loss/model_eval_mse_loss: 0.125739
+loss/model_eval_mse_loss: 0.122048
+loss/model_eval_mse_loss: 0.120679
+loss/model_eval_mse_loss: 0.120665
+loss/model_eval_mse_loss: 0.120177
+loss/model_eval_mse_loss: 0.121561
+loss/model_eval_mse_loss: 0.120539
+total time: 627.892s
+Epoch #10: episode_reward: -17.070 ± 0.696,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.105 ± 0.306,                                    episode_1_off_accuracy: 0.680 ± 0.465
+Epoch #10: episode_reward: -17.070 ± 0.696,                                episode_length: 1.000 ± 0.000
+Epoch #20: episode_reward: -17.077 ± 0.730,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.026 ± 0.159,                                    episode_1_off_accuracy: 0.108 ± 0.310
+Epoch #20: episode_reward: -17.077 ± 0.730,                                episode_length: 1.000 ± 0.000
+Epoch #30: episode_reward: -17.077 ± 0.730,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.002 ± 0.038,                                    episode_1_off_accuracy: 0.019 ± 0.133
+Epoch #30: episode_reward: -17.077 ± 0.730,                                episode_length: 1.000 ± 0.000
+Epoch #40: episode_reward: -17.077 ± 0.730,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.001 ± 0.017,                                    episode_1_off_accuracy: 0.033 ± 0.176
+Epoch #40: episode_reward: -17.077 ± 0.730,                                episode_length: 1.000 ± 0.000
+Epoch #50: episode_reward: -17.077 ± 0.730,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.001 ± 0.032,                                    episode_1_off_accuracy: 0.033 ± 0.174
+Epoch #50: episode_reward: -17.077 ± 0.730,                                episode_length: 1.000 ± 0.000
+Epoch #60: episode_reward: -17.077 ± 0.730,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.031 ± 0.173,                                    episode_1_off_accuracy: 0.130 ± 0.334
+Epoch #60: episode_reward: -17.077 ± 0.730,                                episode_length: 1.000 ± 0.000
+Epoch #70: episode_reward: -17.077 ± 0.730,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.151 ± 0.357,                                    episode_1_off_accuracy: 0.370 ± 0.482
+Epoch #70: episode_reward: -17.077 ± 0.730,                                episode_length: 1.000 ± 0.000
+Epoch #80: episode_reward: -17.014 ± 0.313,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.145 ± 0.352,                                    episode_1_off_accuracy: 0.405 ± 0.490
+Epoch #80: episode_reward: -17.014 ± 0.313,                                episode_length: 1.000 ± 0.000
+Epoch #90: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.319 ± 0.464,                                    episode_1_off_accuracy: 0.556 ± 0.496
+Epoch #90: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #100: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.323 ± 0.466,                                    episode_1_off_accuracy: 0.476 ± 0.499
+Epoch #100: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #110: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.310 ± 0.461,                                    episode_1_off_accuracy: 0.457 ± 0.497
+Epoch #110: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #120: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.319 ± 0.465,                                    episode_1_off_accuracy: 0.459 ± 0.497
+Epoch #120: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #130: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.300 ± 0.457,                                    episode_1_off_accuracy: 0.419 ± 0.492
+Epoch #130: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #140: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.288 ± 0.452,                                    episode_1_off_accuracy: 0.337 ± 0.471
+Epoch #140: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #150: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.290 ± 0.453,                                    episode_1_off_accuracy: 0.400 ± 0.489
+Epoch #150: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #160: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.307 ± 0.460,                                    episode_1_off_accuracy: 0.421 ± 0.492
+Epoch #160: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #170: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.279 ± 0.447,                                    episode_1_off_accuracy: 0.332 ± 0.470
+Epoch #170: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #180: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.299 ± 0.457,                                    episode_1_off_accuracy: 0.448 ± 0.496
+Epoch #180: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #190: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.286 ± 0.450,                                    episode_1_off_accuracy: 0.341 ± 0.473
+Epoch #190: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #200: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.282 ± 0.448,                                    episode_1_off_accuracy: 0.330 ± 0.469
+Epoch #200: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #210: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.334 ± 0.470,                                    episode_1_off_accuracy: 0.577 ± 0.493
+Epoch #210: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #220: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.280 ± 0.448,                                    episode_1_off_accuracy: 0.338 ± 0.472
+Epoch #220: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #230: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.384 ± 0.485,                                    episode_1_off_accuracy: 0.649 ± 0.476
+Epoch #230: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #240: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.279 ± 0.447,                                    episode_1_off_accuracy: 0.338 ± 0.471
+Epoch #240: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #250: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.270 ± 0.443,                                    episode_1_off_accuracy: 0.307 ± 0.460
+Epoch #250: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #260: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.265 ± 0.440,                                    episode_1_off_accuracy: 0.301 ± 0.457
+Epoch #260: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #270: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.273 ± 0.444,                                    episode_1_off_accuracy: 0.323 ± 0.466
+Epoch #270: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #280: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.280 ± 0.448,                                    episode_1_off_accuracy: 0.337 ± 0.471
+Epoch #280: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #290: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.258 ± 0.436,                                    episode_1_off_accuracy: 0.318 ± 0.464
+Epoch #290: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #300: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.264 ± 0.439,                                    episode_1_off_accuracy: 0.342 ± 0.473
+Epoch #300: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #310: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.268 ± 0.441,                                    episode_1_off_accuracy: 0.321 ± 0.465
+Epoch #310: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #320: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.325 ± 0.467,                                    episode_1_off_accuracy: 0.546 ± 0.496
+Epoch #320: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #330: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.371 ± 0.482,                                    episode_1_off_accuracy: 0.719 ± 0.448
+Epoch #330: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #340: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.278 ± 0.447,                                    episode_1_off_accuracy: 0.382 ± 0.484
+Epoch #340: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #350: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.287 ± 0.451,                                    episode_1_off_accuracy: 0.422 ± 0.492
+Epoch #350: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #360: episode_reward: -17.000 ± 0.000,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.257 ± 0.436,                                    episode_1_off_accuracy: 0.388 ± 0.486
+Epoch #360: episode_reward: -17.000 ± 0.000,                                episode_length: 1.000 ± 0.000
+Epoch #370: episode_reward: -17.028 ± 0.442,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.229 ± 0.419,                                    episode_1_off_accuracy: 0.370 ± 0.481
+Epoch #370: episode_reward: -17.028 ± 0.442,                                episode_length: 1.000 ± 0.000
+Epoch #380: episode_reward: -17.014 ± 0.313,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.220 ± 0.413,                                    episode_1_off_accuracy: 0.384 ± 0.485
+Epoch #380: episode_reward: -17.014 ± 0.313,                                episode_length: 1.000 ± 0.000
+Epoch #390: episode_reward: -17.021 ± 0.383,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.139 ± 0.344,                                    episode_1_off_accuracy: 0.302 ± 0.458
+Epoch #390: episode_reward: -17.021 ± 0.383,                                episode_length: 1.000 ± 0.000
+Epoch #400: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.154 ± 0.359,                                    episode_1_off_accuracy: 0.298 ± 0.456
+Epoch #400: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #410: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.104 ± 0.303,                                    episode_1_off_accuracy: 0.318 ± 0.465
+Epoch #410: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #420: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.066 ± 0.246,                                    episode_1_off_accuracy: 0.284 ± 0.450
+Epoch #420: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #430: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.051 ± 0.219,                                    episode_1_off_accuracy: 0.227 ± 0.418
+Epoch #430: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #440: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.062 ± 0.239,                                    episode_1_off_accuracy: 0.218 ± 0.412
+Epoch #440: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #450: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.050 ± 0.216,                                    episode_1_off_accuracy: 0.220 ± 0.413
+Epoch #450: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #460: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.030 ± 0.167,                                    episode_1_off_accuracy: 0.175 ± 0.379
+Epoch #460: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #470: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.037 ± 0.186,                                    episode_1_off_accuracy: 0.173 ± 0.377
+Epoch #470: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #480: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.035 ± 0.182,                                    episode_1_off_accuracy: 0.189 ± 0.391
+Epoch #480: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #490: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.034 ± 0.179,                                    episode_1_off_accuracy: 0.157 ± 0.363
+Epoch #490: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #500: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.041 ± 0.195,                                    episode_1_off_accuracy: 0.168 ± 0.373
+Epoch #500: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #510: episode_reward: -17.028 ± 0.442,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.038 ± 0.189,                                    episode_1_off_accuracy: 0.183 ± 0.385
+Epoch #510: episode_reward: -17.028 ± 0.442,                                episode_length: 1.000 ± 0.000
+Epoch #520: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.027 ± 0.160,                                    episode_1_off_accuracy: 0.159 ± 0.365
+Epoch #520: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #530: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.040 ± 0.195,                                    episode_1_off_accuracy: 0.177 ± 0.381
+Epoch #530: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #540: episode_reward: -17.028 ± 0.442,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.048 ± 0.213,                                    episode_1_off_accuracy: 0.194 ± 0.394
+Epoch #540: episode_reward: -17.028 ± 0.442,                                episode_length: 1.000 ± 0.000
+Epoch #550: episode_reward: -17.028 ± 0.442,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.047 ± 0.210,                                    episode_1_off_accuracy: 0.246 ± 0.429
+Epoch #550: episode_reward: -17.028 ± 0.442,                                episode_length: 1.000 ± 0.000
+Epoch #560: episode_reward: -17.028 ± 0.442,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.057 ± 0.231,                                    episode_1_off_accuracy: 0.295 ± 0.455
+Epoch #560: episode_reward: -17.028 ± 0.442,                                episode_length: 1.000 ± 0.000
+Epoch #570: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.046 ± 0.208,                                    episode_1_off_accuracy: 0.269 ± 0.443
+Epoch #570: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #580: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.090 ± 0.286,                                    episode_1_off_accuracy: 0.347 ± 0.475
+Epoch #580: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+Epoch #590: episode_reward: -17.042 ± 0.541,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.072 ± 0.257,                                    episode_1_off_accuracy: 0.346 ± 0.474
+Epoch #590: episode_reward: -17.042 ± 0.541,                                episode_length: 1.000 ± 0.000
+Epoch #600: episode_reward: -17.035 ± 0.494,                                    episode_length: 1.000 ± 0.000,                                    episode_accuracy: 0.068 ± 0.251,                                    episode_1_off_accuracy: 0.283 ± 0.449
+Epoch #600: episode_reward: -17.035 ± 0.494,                                episode_length: 1.000 ± 0.000
+total time: 41462.408s
+episode_reward: -17.014 ± 0.313,                            episode_length: 1.000 ± 0.000,                            episode_accuracy: 0.169 ± 0.369,                            episode_1_off_accuracy: 0.496 ± 0.494

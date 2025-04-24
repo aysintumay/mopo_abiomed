@@ -155,13 +155,13 @@ def test(trainer, sac_policy, run, logger, model_logger, norm_info, seed, args):
         env = gym.make(args.task, **kwargs)
     else:
         env = gym.make(args.task)
-    dataset = d4rl.qlearning_dataset(env)
+    # dataset = d4rl.qlearning_dataset(env)
 
     #CHANGE
     # dataset = {k: v[:5] for k, v in dataset.items()}
 
-    args.obs_shape = env.observation_space.shape
-    args.action_dim = np.prod(env.action_space.shape)
+    # args.obs_shape = env.observation_space.shape
+    # args.action_dim = np.prod(env.action_space.shape)
     
 
     env.seed(seed)
