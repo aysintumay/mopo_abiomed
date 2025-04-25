@@ -74,7 +74,8 @@ class BehaviorCloning:
             self.env = gym.make(args.task)
         
         self.env.seed(seed)
-        self.dataset = d4rl.qlearning_dataset(self.env)
+        # self.dataset = d4rl.qlearning_dataset(self.env)
+        dataset = self.env.data
         
         # Initialize model
         self.obs_dim = self.env.observation_space.shape[0]
@@ -131,7 +132,7 @@ class BehaviorCloning:
                 break
             prev_loss = avg_loss
 
-    def evaluate(self, eval_episodes=15):
+    def evaluate(self, eval_episodes=1000):
         self.model.eval()
         raw_obs = self.env.reset()
         if self.args.task == "Abiomed-v0":
@@ -156,7 +157,7 @@ class BehaviorCloning:
             # else:
             #     obs = next_raw_obs
 
-            if terminal:
+            if episode_length == 1:
                 eval_ep_info_buffer.append({
                     "episode_reward": episode_reward,
                     "episode_length": episode_length
@@ -202,12 +203,13 @@ def main():
     # Train and evaluate        
     results = []
     for seed in args.seeds:
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
+        #     random.seed(seed)
+        #     np.random.seed(seed)
+        #     torch.manual_seed(seed)
+        #     torch.cuda.manual_seed_all(seed)
 
-        log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+            # log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+        log_file = f'{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
         log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
         model_path = os.path.join(args.model_dir, args.task, args.algo_name, log_file)
         writer = SummaryWriter(log_path)
@@ -223,7 +225,7 @@ def main():
         # # Save model
         # model_path = os.path.join(args.model_dir, f"bc_{args.task}_{t0}_seed_{seed}.pt")
         # bc.save_model(model_path)
-    
+
 
         # # Evaluate
         # eval_results = bc.evaluate()
@@ -251,14 +253,14 @@ def main():
         mean_length = np.mean(eval_results["eval/episode_length"])
         std_length = np.std(eval_results["eval/episode_length"])
         results.append({
-            'seed': seed,
+            # 'seed': seed,
             'mean_return': mean_return,
             'std_return': std_return,
             'mean_length': mean_length,
             'std_length': std_length
         })
 
-        print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+        print(f"Mean Return: {mean_return:.2f} ± {std_return:.2f}")
 
     # Save results to CSV
     os.makedirs(os.path.join(args.resultsdir, args.task, "bc"), exist_ok=True)

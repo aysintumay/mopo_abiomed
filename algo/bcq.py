@@ -58,7 +58,8 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
 
     # Load buffer
     replay_buffer = utils.ReplayBuffer(state_dim, action_dim, device)
-    dataset = d4rl.qlearning_dataset(env)
+    # dataset = d4rl.qlearning_dataset(env)
+    dataset = env.data
 
     N = dataset['rewards'].shape[0]
     print('Loading buffer! total size:', N)
@@ -67,9 +68,9 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
         if args.task == 'Abiomed-v0':
             new_obs = dataset['next_observations'][i]
 
-            new_obs = new_obs[:90]
+            # new_obs = new_obs[:90]
             new_obs = new_obs.reshape(-1)
-            obs = obs[:90]
+            # obs = obs[:90]
             obs = obs.reshape(-1)
         else:
             new_obs = dataset['observations'][i+1]
@@ -87,6 +88,7 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     while training_iters < args.max_timesteps: 
             print('Train step:', training_iters)
             pol_vals = policy.train(replay_buffer, iterations=int(args.eval_freq), batch_size=args.batch_size)
+            # pickle save
 
             ev = eval_policy(policy, args.task, seed, args.eval_episodes)
             evaluations.append(ev)
@@ -96,30 +98,33 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
             training_iters += args.eval_freq
             print(f"Training iterations: {training_iters}")
 
-    return evaluations
+    # return evaluations
+    return pol_vals
 
 
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
-def eval_policy(policy, env_name, seed, eval_episodes=10):
+def eval_policy(policy, env_name, seed, eval_episodes=1000):
     eval_env = gym.make(env_name, **kwargs) 
     eval_env.seed(seed)# + 100)
     eval_ep_info_buffer = []
 
+    state, done = eval_env.reset(), False
     for _ in range(eval_episodes):
-            state, done = eval_env.reset(), False
+            # state, done = eval_env.reset(), False
             ep_reward = 0.0
             episode_length = 0
 
-            while not done:
-                action = policy.select_action(np.array(state))
-                state, reward, done, _ = eval_env.step(action)
-                ep_reward += reward
-                episode_length += 1
+            # while not done:
+            action = policy.select_action(np.array(state))
+            state, reward, done, _ = eval_env.step(action)
+            ep_reward += reward
+            episode_length += 1
 
             eval_ep_info_buffer.append(
                 {"episode_reward": ep_reward, "episode_length": episode_length}
             )
+            state = eval_env.get_obs() 
     return {
         "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
         "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
@@ -164,6 +169,8 @@ if __name__ == "__main__":
     else:
         env = gym.make(args.task)
 
+    t0 = datetime.now().strftime("%m%d_%H%M%S")
+
     results = []
     for seed in args.seeds:
         # env = gym.make(args.task)
@@ -173,15 +180,23 @@ if __name__ == "__main__":
         np.random.seed(seed)
 
         state_dim = env.observation_space.shape[0]
+        print("STATE DIM: ", state_dim)
         action_dim = env.action_space.shape[0] 
         max_action = float(env.action_space.high[0])
 
         device = torch.device(args.device_id if torch.cuda.is_available() else "cpu")
 
-        evals = train_BCQ(env, state_dim, action_dim, max_action, device, args.model_dir, seed, args)
-        np.save(os.path.join(args.model_dir, f"{args.task}_{seed}"), evals)
+        policy = train_BCQ(env, state_dim, action_dim, max_action, device, args.model_dir, seed, args)
+        np.save(os.path.join(args.model_dir, f"{args.task}_{t0}_{seed}"), policy)
 
-        eval_results = evals[-1]
+        # change the input of the env to test - data name and scalar info needs to change
+        # call eval policy again - 
+        env.scaler_info = {'rwd_stds': env.rwd_stds, 'rwd_means':env.rwd_means, 'scaler': env.scaler}
+        args.data_name = 'test'
+        kwargs = {"args": args, "logger": logger, 'scaler_info': env.scaler_info}
+
+        # eval_results = evals[-1]
+        eval_results = eval_policy(policy, env, seed, 1000)
         # Evaluate
         mean_return = np.mean(eval_results["eval/episode_reward"])
         std_return = np.std(eval_results["eval/episode_reward"])
