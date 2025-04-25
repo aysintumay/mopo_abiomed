@@ -7,10 +7,17 @@ import torch
 import d4rl
 import pandas as pd
 from datetime import datetime
+from torch.utils.tensorboard import SummaryWriter
 
 import continuous_bcq.BCQ
 import continuous_bcq.DDPG as DDPG
 import continuous_bcq.utils as utils
+
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from models.policy_models import MLP, DiagGaussian, BasicActor
+from common.logger import Logger
+from common.util import set_device_and_logger
 
 # python algo/bcq.py --task halfcheetah-random-v0 --seeds 1 2 3 --model-dir saved_models/BCQ  --device_id 5
 # we can do --max_timesteps 1 --eval_episodes 1 for testing
@@ -25,6 +32,9 @@ def get_args():
     parser.add_argument("--device_id", type=int, default=0)
     parser.add_argument("--logdir", type=str, default="results")
     parser.add_argument("--eval_episodes", type=int, default=10)
+    parser.add_argument("--pretrained", type=bool, default=True)
+    parser.add_argument("--algo-name", type=str, default="bcq")                      
+    parser.add_argument("--data-name", type=str, default="train")
         
     parser.add_argument("--eval_freq", default=2e4, type=float)     # How often (time steps) we evaluate
     parser.add_argument("--max_timesteps", default=1e6, type=int)   # Max time steps to run environment or train for (this defines buffer size)
@@ -56,6 +66,11 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
         obs = dataset['observations'][i]
         if args.task == 'Abiomed-v0':
             new_obs = dataset['next_observations'][i]
+
+            new_obs = new_obs[:90]
+            new_obs = new_obs.reshape(-1)
+            obs = obs[:90]
+            obs = obs.reshape(-1)
         else:
             new_obs = dataset['observations'][i+1]
         action = dataset['actions'][i]
@@ -87,7 +102,7 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
 def eval_policy(policy, env_name, seed, eval_episodes=10):
-    eval_env = gym.make(env_name) 
+    eval_env = gym.make(env_name, **kwargs) 
     eval_env.seed(seed)# + 100)
     eval_ep_info_buffer = []
 
@@ -123,9 +138,35 @@ if __name__ == "__main__":
 
     os.makedirs(args.model_dir, exist_ok=True)
 
+    t0 = datetime.now().strftime("%m%d_%H%M%S")
+
+    log_file = f'seed__{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+    log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+    model_path = os.path.join(args.model_dir, args.task, args.algo_name, log_file)
+    writer = SummaryWriter(log_path)
+    writer.add_text("args", str(args))
+    logger = Logger(writer=writer,log_path=log_path)
+    model_logger = Logger(writer=writer,log_path=model_path)
+    
+    Devid = args.device_id if args.device == 'cuda' else -1
+    set_device_and_logger(Devid, logger, model_logger)
+
+    # Create environment and get dataset
+    scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
+    if args.task == "Abiomed-v0":
+        gym.envs.registration.register(
+            id='Abiomed-v0',
+            entry_point='abiomed_env:AbiomedEnv',
+            max_episode_steps=1000,
+        )
+        kwargs = {"args": args, 'scaler_info': scaler_info}
+        env = gym.make(args.task, **kwargs)
+    else:
+        env = gym.make(args.task)
+
     results = []
     for seed in args.seeds:
-        env = gym.make(args.task)
+        # env = gym.make(args.task)
 
         env.seed(seed)
         torch.manual_seed(seed)

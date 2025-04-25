@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import time
 import numpy as np
 import torch
 import torch.nn as nn
@@ -37,6 +38,22 @@ def get_args():
     parser.add_argument("--device_id", type=int, default=0)
     parser.add_argument("--algo-name", type=str, default="bc")
     return parser.parse_args()
+
+def eval_acc(eval_env, y_pred_test, y_test):
+
+    pred_unreg =  eval_env.unnormalize(np.array(y_pred_test), idx=12)
+    real_unreg = eval_env.unnormalize(y_test, idx=12) 
+
+
+    pl_pred_fl = np.round(pred_unreg.flatten())
+    pl_true_fl = np.round(real_unreg.flatten())
+    n = len(pl_pred_fl)
+
+
+    accuracy = sum(pl_pred_fl == pl_true_fl)/n
+    accuracy_1_off = (sum(pl_pred_fl == pl_true_fl) + sum(pl_pred_fl+1 == pl_true_fl)+sum(pl_pred_fl-1 == pl_true_fl))/n
+
+    return accuracy, accuracy_1_off
 
 class BehaviorCloning:
     def __init__(self, args, seed=0):
@@ -134,10 +151,10 @@ class BehaviorCloning:
             episode_reward += reward
             episode_length += 1
 
-            if self.args.task == "Abiomed-v0":
-                obs = next_raw_obs.reshape(-1)
-            else:
-                obs = next_raw_obs
+            # if self.args.task == "Abiomed-v0":
+            #     obs = next_raw_obs.reshape(-1)
+            # else:
+            #     obs = next_raw_obs
 
             if terminal:
                 eval_ep_info_buffer.append({
@@ -148,7 +165,8 @@ class BehaviorCloning:
                 episode_reward, episode_length = 0, 0
 
                 # reset and re‑flatten
-                raw_obs = self.env.reset()
+                # raw_obs = self.env.reset()
+                obs = self.env.get_obs()
                 if self.args.task == "Abiomed-v0":
                     obs = raw_obs.reshape(-1)
                 else:
@@ -159,13 +177,13 @@ class BehaviorCloning:
             "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
         }
     
-    
     def save_model(self, path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         torch.save(self.model.state_dict(), path)
         
     def load_model(self, path):
-        self.model.load_state_dict(torch.load(path))
+        # self.model.load_state_dict(torch.load(path))
+        self.model.load_state_dict(torch.load(path, map_location='cuda:0'))
 
 
 def main():
@@ -201,11 +219,30 @@ def main():
         set_device_and_logger(Devid, logger, model_logger)
 
         bc = BehaviorCloning(args)
-        bc.train()        
-        # Save model
-        model_path = os.path.join(args.model_dir, f"bc_{args.task}_{t0}_seed_{seed}.pt")
-        bc.save_model(model_path)
+        # bc.train()        
+        # # Save model
+        # model_path = os.path.join(args.model_dir, f"bc_{args.task}_{t0}_seed_{seed}.pt")
+        # bc.save_model(model_path)
     
+
+        # # Evaluate
+        # eval_results = bc.evaluate()
+        # mean_return = np.mean(eval_results["eval/episode_reward"])
+        # std_return = np.std(eval_results["eval/episode_reward"])
+        # mean_length = np.mean(eval_results["eval/episode_length"])
+        # std_length = np.std(eval_results["eval/episode_length"])
+        # results.append({
+        #     'seed': seed,
+        #     'mean_return': mean_return,
+        #     'std_return': std_return,
+        #     'mean_length': mean_length,
+        #     'std_length': std_length
+        # })
+        
+        # print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+
+        model_path = os.path.join(args.model_dir, f"bc_Abiomed-v0_0424_185145_seed_{seed}.pt")
+        bc.load_model(model_path)
 
         # Evaluate
         eval_results = bc.evaluate()
@@ -220,7 +257,7 @@ def main():
             'mean_length': mean_length,
             'std_length': std_length
         })
-        
+
         print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
 
     # Save results to CSV
