@@ -133,6 +133,9 @@ def eval_acc(eval_env, y_pred_test, y_test):
     return accuracy, accuracy_1_off
 
 
+
+
+
 def evaluate(policy, eval_env, eval_episodes, _terminal_counter):  
     policy.eval()
     obs = eval_env.reset()
@@ -272,9 +275,9 @@ if __name__ == "__main__":
                     help="Which GPU device index to use"
                 )
 
-    parser.add_argument("--seeds", type=int, nargs='+', default=[1])
+    parser.add_argument("--seed", type=int, default=1)
     
-    parser.add_argument("--eval_episodes", type=int, default=10)
+    parser.add_argument("--eval_episodes", type=int, default=1000)
     
     parser.add_argument("--terminal_counter", type=int, default=1) 
     parser.add_argument("--logdir", type=str, default="log")
@@ -316,15 +319,15 @@ if __name__ == "__main__":
     #     bc_args(parser)
     args = parser.parse_args()
 
-    seed = args.seed
+    
     results = []
     # for seed in args.seeds:
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
 
     t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
-    log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
+    log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
     # log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
     log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
@@ -344,7 +347,7 @@ if __name__ == "__main__":
     policy = get_mopo()
     #change the policy path
     #load the state_dict and model
-    policy_state_dict = torch.load(args.policy_path, map_location=f'cuda:{args.devid}')
+    policy_state_dict = torch.load(args.policy_path, map_location=f'cuda')
     policy.load_state_dict(policy_state_dict)
 
     eval_info = evaluate(policy, env, args.eval_episodes, args.terminal_counter) 

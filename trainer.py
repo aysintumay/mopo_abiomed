@@ -138,7 +138,7 @@ class Trainer:
                     num_timesteps += 1
                     t.update(1)
             # evaluate current policy
-            if e % 10 == 0:
+            if e % 50 == 0:
                 if self.env_name == 'Abiomed-v0':
                     eval_info, _ = self.evaluate()
                 else:
@@ -225,7 +225,7 @@ class Trainer:
 
                 #d4rl don't have REF_MIN_SCORE and REF_MAX_SCORE for v2 environments
                 dset_name = self.eval_env.unwrapped.spec.name+'-v0'
-                self.logger.print( f"normalized score: {d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100}")
+                # self.logger.print( f"normalized score: {d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100}")
 
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
