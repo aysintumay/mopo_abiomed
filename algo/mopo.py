@@ -63,7 +63,7 @@ class MOPO:
         observations = init_transitions["observations"]
         for _ in range(self._rollout_length):
             actions = self.policy.sample_action(observations)
-            starttime = time.time()
+            # starttime = time.time()
             next_observations, rewards, terminals, infos = self.dynamics_model.predict(observations, actions)
             # print(next_observations.shape, rewards.shape)
             # print(f'ended transiton rollout prediction, {time.time()-starttime}' )

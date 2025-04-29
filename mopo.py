@@ -59,7 +59,7 @@ def get_args():
     parser.add_argument("--n-elites", type=int, default=5)
     parser.add_argument("--reward-penalty-coef", type=float, default=5e-3) #1e=6
     parser.add_argument("--rollout-length", type=int, default=5) #1 
-    parser.add_argument("--rollout-batch-size", type=int, default=5000) #50000
+    parser.add_argument("--rollout-batch-size", type=int, default=50000) #50000
     parser.add_argument("--rollout-freq", type=int, default=1000)
     parser.add_argument("--model-retain-epochs", type=int, default=5)
     parser.add_argument("--real-ratio", type=float, default=0.05)

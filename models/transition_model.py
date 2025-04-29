@@ -239,7 +239,7 @@ class TransitionModel:
         # util.logger.log_path = '/home/ubuntu/mopo/log/Abiomed-v0/mopo/seed_5_0331_161040-Abiomed_v0_mopo'
         # util.logger.log_path = '/home/ubuntu/mopo/log/halfcheetah-medium-replay-v0/mopo/seed_5_0403_215901-halfcheetah_medium_replay_v0_mopo'
         # model_save_dir = os.path.join(util.logger_model.log_path, info)
-        model_save_dir = 'saved_models/Abiomed-v0/mopo/seed_1_0410_045638-Abiomed_v0_mopo'
+        model_save_dir = '/home/ubuntu/mopo/saved_models/walker2d-random-v0/mopo/seed_1_0415_200911-walker2d_random_v0_mopo/dynamics_model'
         for network_name, network in self.networks.items():
             load_path = os.path.join(model_save_dir, network_name + ".pt")
             state_dict = torch.load(load_path, map_location='cuda')

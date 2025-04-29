@@ -1,0 +1,13 @@
+Epoch #50: episode_reward: 27.137 ± 2.670,                                episode_length: 63.397 ± 5.885
+Epoch #100: episode_reward: 552.227 ± 24.481,                                episode_length: 442.335 ± 24.554
+Epoch #150: episode_reward: 26.518 ± 1.841,                                episode_length: 50.297 ± 4.118
+Epoch #200: episode_reward: 126.757 ± 3.951,                                episode_length: 145.770 ± 3.687
+Epoch #250: episode_reward: 152.946 ± 8.700,                                episode_length: 194.942 ± 8.096
+Epoch #300: episode_reward: 119.907 ± 7.142,                                episode_length: 151.232 ± 6.339
+Epoch #350: episode_reward: 113.852 ± 2.031,                                episode_length: 93.824 ± 1.796
+Epoch #400: episode_reward: 58.317 ± 1.975,                                episode_length: 113.324 ± 1.979
+Epoch #450: episode_reward: 37.499 ± 3.262,                                episode_length: 88.225 ± 6.911
+Epoch #500: episode_reward: 175.896 ± 2.699,                                episode_length: 134.651 ± 2.795
+Epoch #550: episode_reward: 95.456 ± 5.714,                                episode_length: 88.686 ± 4.362
+Epoch #600: episode_reward: 43.836 ± 2.917,                                episode_length: 89.593 ± 6.210
+total time: 13906.297s
