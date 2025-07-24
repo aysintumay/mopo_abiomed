@@ -4,7 +4,7 @@ import numpy as np
 import os
 import pickle
 import torch
-from world_transformer import WorldTransformer
+from helpers.world_transformer import WorldTransformer
 from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 

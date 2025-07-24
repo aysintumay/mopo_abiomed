@@ -16,8 +16,8 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 ## DSRL Implementation
 outside the mopo directory run:
 ```
-python mopo/mopo.py --algo-name mbpo --pretrained False  --task HopperVelocity  --seed 1 --reward-penalty-coef 0.0 --rollout-length 5 --epoch 100 --devid 7
-python mopo/mopo.py --algo-name mopo --pretrained False  --task HopperVelocity  --seed 1 --reward-penalty-coef 1.0 --rollout-length 5 --epoch 100 --devid 7
+python mopo/mopo.py --algo-name mbpo --pretrained False  --task OfflineHopperVelocity-v1  --seed 1 --reward-penalty-coef 0.0 --rollout-length 5 --epoch 100 --devid 7
+python mopo/mopo.py --algo-name mopo --pretrained False  --task OfflineHopperVelocity-v1  --seed 1 --reward-penalty-coef 1.0 --rollout-length 5 --epoch 100 --devid 7
 ```
 
 
