@@ -8,7 +8,7 @@ import pickle
 
 import gym
 import d4rl
-import abiomed_env
+import trash.abiomed_env as abiomed_env
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter

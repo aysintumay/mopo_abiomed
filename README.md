@@ -13,6 +13,14 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 
 # Usage
 
+## DSRL Implementation
+outside the mopo directory run:
+```
+python mopo/mopo.py --algo-name mbpo --pretrained False  --task HopperVelocity  --seed 1 --reward-penalty-coef 0.0 --rollout-length 5 --epoch 100 --devid 7
+python mopo/mopo.py --algo-name mopo --pretrained False  --task HopperVelocity  --seed 1 --reward-penalty-coef 1.0 --rollout-length 5 --epoch 100 --devid 7
+```
+
+
 
 ## Abiomed Implementation:
 
@@ -49,13 +57,13 @@ python algo/mbpo.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-p
 ## MOPO - Train
 
 ```
-# for hopper-medium-replay-v0 task
+## for hopper-medium-replay-v0 task
 python train.py --task "hopper-medium-replay-v0" --rollout-length 5 --reward-penalty-coef 1.0 
 
-# for walker2d-medium-replay-v0 task
+## for walker2d-medium-replay-v0 task
 python train.py --task "walker2d-random-v2" --rollout-length 1 --reward-penalty-coef 1.0 
 
-# for halfcheetah-medium-v0 task
+## for halfcheetah-medium-v0 task
 python train.py --task "halfcheetah-random-v0" --rollout-length 5 --reward-penalty-coef 1.0 
 
 ```
@@ -63,6 +71,10 @@ To train the world model, train.py() -> pretrained = False
 To train the dynamics model, comment out ```dynamics_model.load_model()``` and decomment ```trainer.train_dynamics()```
 Change the path of the dynamics model in model.transition_model.load_model()
 
+## train with a saved dataset
+```
+python mopo.py --algo-name mbpo --pretrained False --data_path  "/abiomed/intermediate_data_d4rl/sac_expert/Hopper-v2_expert_2100.pkl" --task hopper-expert-v2 --seed 1 --reward-penalty-coef 0.0 --rollout-length 5 --epoch 100
+```
 
 After training with different seeds;
 

@@ -6,7 +6,8 @@ import torch
 import pandas as pd
 from datetime import datetime
 import gym
-import d4rl
+# import d4rl
+import dsrl
 from torch.utils.tensorboard import SummaryWriter
 
 import sys
@@ -20,6 +21,7 @@ def evaluate(policy, seed, trainer, args):
 
     trainer.eval_env = gym.make(args.task)
     trainer.eval_env.seed(seed)
+    #add noisy trainer env here?
     trainer.algo.policy = policy
 
     eval_info = trainer._evaluate()

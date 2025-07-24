@@ -4,10 +4,13 @@ import os
 import random
 import importlib
 import wandb 
+import sys
+import pickle
 
-import gym
-import d4rl
-import abiomed_env
+# import gym
+import dsrl
+# import d4rl
+import trash.abiomed_env as abiomed_env
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -21,7 +24,10 @@ from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
 from common import util
-from abiomed_env import AbiomedEnv
+
+
+# from noisy_mujoco.abiomed_env import AbiomedEnv
+
 
 
 # def get_args():
@@ -91,31 +97,22 @@ from abiomed_env import AbiomedEnv
 #     return parser.parse_args()
 
 
-def train(run, logger, seed, args):
+def train(env, run, logger, seed, args):
 
-    # create env and dataset
-    scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
-    if args.task == "Abiomed-v0":
-        gym.envs.registration.register(
-        id='Abiomed-v0',
-        entry_point='abiomed_env:AbiomedEnv',  
-        max_episode_steps = 1000,
-        )
-        kwargs = {"args": args, "logger": logger, 'scaler_info': scaler_info}
-        env = gym.make(args.task, **kwargs)
-        dataset = env.qlearning_dataset()
+    
+    if args.data_path != "":
+        with open(args.data_path, 'rb') as f:
+            dataset = pickle.load(f)
     else:
-        env = gym.make(args.task)
-        dataset = d4rl.qlearning_dataset(env)
-
+        dataset = env.get_dataset() 
     #CHANGE
-    # dataset = {k: v[:5] for k, v in dataset.items()}
+    dataset = {k: v[:5] for k, v in dataset.items()}
 
     args.obs_shape = env.observation_space.shape
     args.action_dim = np.prod(env.action_space.shape)
     
 
-    env.seed(seed)
+    # env.seed(seed)
 
 
     # import configs

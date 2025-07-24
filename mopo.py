@@ -1,6 +1,7 @@
 import argparse
 import time
 import os
+import sys
 import datetime
 import random
 import wandb
@@ -9,20 +10,30 @@ import torch
 import pandas as pd
 from matplotlib import pyplot as plt
 import pickle
-
+# import gym
+import gymnasium as gym
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
-from algo.mbpo import evaluate as evaluate_mbpo
-from test import test
+# from algo.mbpo import evaluate as evaluate_mbpo
+from helpers.evaluate_d4rl import _evaluate as evaluate_d4rl
+# from test import test
 from train import train
 from common.buffer import ReplayBuffer
 from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
 from common import util
+from dsrl.offline_env import OfflineEnvWrapper, wrap_env
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from noisy_mujoco.wrappers import (RandomNormalNoisyActions,
+                                      RandomNormalNoisyTransitions,
+                                        RandomNormalNoisyTransitionsActions
+                                    )
 
+from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
 import warnings
+
 warnings.filterwarnings("ignore")
 
 
@@ -30,19 +41,20 @@ warnings.filterwarnings("ignore")
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--algo-name", type=str, default="mopo")
-    parser.add_argument("--pretrained", type=bool, default=True)
+    parser.add_argument("--pretrained", type=bool, default=False)
     parser.add_argument("--mode", type=str, default="offline")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
     parser.add_argument("--policy_path" , type=str, default="")
     parser.add_argument("--model_path" , type=str, default="saved_models")
+    parser.add_argument("--data_path", type=str, default="")
     parser.add_argument(
                     "--devid", 
                     type=int,
-                    default=0,
+                    default=7,
                     help="Which GPU device index to use"
                 )
 
-    parser.add_argument("--task", type=str, default="Abiomed-v0")
+    parser.add_argument("--task", type=str, default="OfflineHopperVelocity-v1")
     parser.add_argument("--seeds", type=int, nargs='+', default=[1,2,3])
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
@@ -65,7 +77,7 @@ def get_args():
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=600) #1000
+    parser.add_argument("--epoch", type=int, default=1) #1000
     parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
     parser.add_argument("--eval_episodes", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=256)
@@ -98,25 +110,18 @@ def get_args():
                         default='/data/abiomed_tmp/processed',
                         help='Specify the path to read data.')
     
+    parser.add_argument("--noise_rate_action", type=float, help="Portion of action to be noisy with probability", default=0.01)
+    parser.add_argument("--noise_rate_transition", type=float, help="Portion of transitions to be noisy with probability", default=0.01)
+    parser.add_argument("--loc", type=float, default=0.0, help="Mean of the noise distribution")
+    parser.add_argument("--scale_action", type=float, default=0.001, help="Standard deviation of the action noise distribution")
+    parser.add_argument("--scale_transition", type=float, default=0.001, help="Standard deviation of the transition noise distribution")
+    parser.add_argument("--action", action='store_true', help="Create dataset with noisy actions")
+    parser.add_argument("--transition", action='store_true', help="Create dataset with noisy transitions")
+    
     parser.add_argument(
         '--root-dir', 
         #default='log/hopper-medium-replay-v0/mopo',
          default='log', help='root dir'
-    )
-   
-    parser.add_argument(
-        '--algos', default="mopo", help='algos'
-    )
-    
-    parser.add_argument(
-        '--xlabel', default='Timesteps', help='matplotlib figure xlabel'
-    )
-    parser.add_argument(
-        '--ylabel', default='episode_reward', help='matplotlib figure ylabel'
-    )
-
-    parser.add_argument(
-        '--ylabel2', default='normalized_episode_reward', help='matplotlib figure ylabel'
     )
 
     args = parser.parse_args()
@@ -160,7 +165,45 @@ def main(args):
         args.model_path = model_path
         args.pretrained = True #to be fast
         args.data_name = 'train'
-       
+        # create env and dataset
+
+        #====old======
+        scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
+        if args.task == "Abiomed-v0":
+            gym.envs.registration.register(
+            id='Abiomed-v0',
+            entry_point='abiomed_env:AbiomedEnv',  
+            max_episode_steps = 1000,
+            )
+            kwargs = {"args": args, "logger": logger, 'scaler_info': scaler_info}
+            env = gym.make(args.task, **kwargs)
+            dataset = env.qlearning_dataset()
+        #=====old======
+        else:
+            env = gym.make(args.task)
+            
+            if args.action and not args.transition:
+                print("Environment with noisy actions")
+                env = RandomNormalNoisyActions(env=env, noise_rate=args.noise_rate_action, loc = args.loc, scale = args.scale_action)
+            elif args.transition and not args.action:
+                print("Environment with noisy transitions")
+                env = RandomNormalNoisyTransitions(env=env, noise_rate=args.noise_rate_transition, loc = args.loc, scale = args.scale_transition)
+            elif args.transition and args.action:
+                print("Environment with noisy actions and transitions")
+                env = RandomNormalNoisyTransitionsActions(env=env, noise_rate_action=args.noise_rate_action, loc = args.loc, scale_action = args.scale_action,\
+                                                                noise_rate_transition=args.noise_rate_transition, scale_transition = args.scale_transition)
+            else:
+                print("Environment without noise")
+                env = env
+            # env = wrap_env(
+            #         env=env,
+            #         reward_scale=1,
+            #     )
+            # env = OfflineEnvWrapper(env)
+
+
+
+        
         if args.task == 'Abiomed-v0':
             scaler_info, policy, trainer = train(run, logger, seed, args)
             args.data_name = 'test'
@@ -191,9 +234,11 @@ def main(args):
             
             print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
         else:
-            policy, trainer = train(run, logger, seed, args)
+            policy, trainer = train(env, run, logger, seed, args)
             trainer.algo.save_dynamics_model(f"dynamics_model")
-            results.append(evaluate_mbpo(policy, seed, trainer, args))
+
+            # TODO: DSRL incompatibility with inner environment wrappers
+            # results.append(evaluate_d4rl(policy, env, args.eval_episodes))
         
 
         

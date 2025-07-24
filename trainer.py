@@ -4,7 +4,7 @@ import wandb
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
-import d4rl
+# import d4rl
 
 from tqdm import tqdm
 from common import util
