@@ -123,23 +123,27 @@ def _evaluate(policy, eval_env, episodes):
             obs = next_obs
 
             if terminal or truncated:
-                eval_ep_info_buffer.append(
-                    {"episode_reward": episode_reward, "episode_length": episode_length}
-                )
-                # TODO: implemented but not tested for noisy wrappers
-                print(eval_env.get_normalized_score(episode_reward, 0))
-
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
-                if args.task[0].isupper():
-                    obs, _ = eval_env.reset()
-                else:
-                    obs = eval_env.reset()
+                # if args.task[0].isupper():
+                obs, _ = eval_env.reset()
+                # else:
+                #     obs = eval_env.reset()
+        eval_info = {
+                            "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
+                            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
+                        }
 
-        return {
-            "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
-            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
-        }
+        ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
+        ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
+        print(f"Mean Return: {ep_reward_mean:.2f} ± {ep_reward_std:.2f}")
+
+        return {    
+                'mean_return': ep_reward_mean,
+                'std_return': ep_reward_std,
+                'mean_length': ep_length_mean,
+                'std_length': ep_length_std
+            }
 
 
 def get_env():
