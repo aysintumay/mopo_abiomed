@@ -205,31 +205,31 @@ class Trainer:
 
     def _evaluate(self):
         self.algo.policy.eval()
-        obs = self.eval_env.reset()
+        obs, _ = self.eval_env.reset()
         eval_ep_info_buffer = []
         num_episodes = 0
         episode_reward, episode_length = 0, 0
 
         while num_episodes < self._eval_episodes:
             action = self.algo.policy.sample_action(obs, deterministic=True)
-            next_obs, reward, terminal, _ = self.eval_env.step(action) #next_obs = world model forecast
+            next_obs, reward, terminal, truncated, _= self.eval_env.step(action) #next_obs = world model forecast
             episode_reward += reward
             episode_length += 1
 
             obs = next_obs  #next_obs = world model forecast
 
-            if terminal:
+            if terminal or truncated:
                 eval_ep_info_buffer.append(
                     {"episode_reward": episode_reward, "episode_length": episode_length}
                 )
 
                 #d4rl don't have REF_MIN_SCORE and REF_MAX_SCORE for v2 environments
-                dset_name = self.eval_env.unwrapped.spec.name+'-v0'
+                # dset_name = self.eval_env.unwrapped.spec.name+'-v0'
                 # self.logger.print( f"normalized score: {d4rl.get_normalized_score(dset_name, np.array(episode_reward))*100}")
 
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
-                obs = self.eval_env.reset()
+                obs, _ = self.eval_env.reset()
 
         return {
             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],

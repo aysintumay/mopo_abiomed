@@ -106,7 +106,7 @@ def train(env, run, logger, seed, args):
     else:
         dataset = env.get_dataset() 
     #CHANGE
-    dataset = {k: v[:5] for k, v in dataset.items()}
+    # dataset = {k: v[:5] for k, v in dataset.items()}
 
     args.obs_shape = env.observation_space.shape
     args.action_dim = np.prod(env.action_space.shape)
