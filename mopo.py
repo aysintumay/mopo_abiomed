@@ -142,7 +142,6 @@ def main(args):
                 group=args.algo_name,
                 config=vars(args),
                 )
-    run = None
     results = []
     for seed in args.seeds:
         random.seed(seed)

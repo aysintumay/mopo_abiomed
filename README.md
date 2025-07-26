@@ -21,11 +21,10 @@ python mopo_abiomed/mopo.py --algo-name mopo --pretrained False  --task OfflineH
 ```
 
 
-
 ## Abiomed Implementation:
 
 ```
-python mopo.py --task Abiomed-v0 --reward-penalty-coef 1e-3 --model_path 'saved_models"
+python abiomed_mopo/mopo.py --algo-name mbpo --task abiomed --reward-penalty-coef 0.0 --epoch 100
 ```
 
 ## Baselines
