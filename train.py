@@ -30,83 +30,23 @@ from common import util
 
 
 
-# def get_args():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--algo-name", type=str, default="mopo")
-#     parser.add_argument("--pretrained", type=bool, default=True)
-    
-#     parser.add_argument("--task", type=str, default="Abiomed-v0")
-#     parser.add_argument("--seed", type=int, default=1)
-    
-#     # for running baselines
-#     parser.add_argument("--seeds", type=int, nargs='+', default=[])
-#     parser.add_argument("--baseline-logdir", type=str, default="results")
-
-
-#     parser.add_argument("--actor-lr", type=float, default=3e-4)
-#     parser.add_argument("--critic-lr", type=float, default=3e-4)
-#     parser.add_argument("--gamma", type=float, default=0.99)
-#     parser.add_argument("--tau", type=float, default=0.005)
-#     parser.add_argument("--alpha", type=float, default=0.2)
-#     parser.add_argument('--auto-alpha', default=True)
-#     parser.add_argument('--target-entropy', type=int, default=-3) #-action_dim
-#     parser.add_argument('--alpha-lr', type=float, default=3e-4)
-
-#     # dynamics model's arguments
-#     parser.add_argument("--dynamics-lr", type=float, default=0.001)
-#     parser.add_argument("--n-ensembles", type=int, default=7)
-#     parser.add_argument("--n-elites", type=int, default=5)
-#     parser.add_argument("--reward-penalty-coef", type=float, default=1.0) #1e=6
-#     parser.add_argument("--rollout-length", type=int, default=5) #1 
-#     parser.add_argument("--rollout-batch-size", type=int, default=50000) #50000
-#     parser.add_argument("--rollout-freq", type=int, default=1000)
-#     parser.add_argument("--model-retain-epochs", type=int, default=5)
-#     parser.add_argument("--real-ratio", type=float, default=0.05)
-#     parser.add_argument("--dynamics-model-dir", type=str, default=None)
-
-#     parser.add_argument("--epoch", type=int, default=1000) 
-#     parser.add_argument("--step-per-epoch", type=int, default=1000)
-#     parser.add_argument("--eval_episodes", type=int, default=10)
-#     parser.add_argument("--batch-size", type=int, default=256)
-#     parser.add_argument("--logdir", type=str, default="log")
-#     parser.add_argument("--log-freq", type=int, default=1000)
-#     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
-
-#     #world transformer arguments
-#     parser.add_argument('-seq_dim', '--seq_dim', type=int, metavar='<dim>', default=12,
-#                         help='Specify the sequence dimension.')
-#     parser.add_argument('-output_dim', '--output_dim', type=int, metavar='<dim>', default=11*12,
-#                         help='Specify the sequence dimension.')
-#     parser.add_argument('-bc', '--bc', type=int, metavar='<size>', default=64,
-#                         help='Specify the batch size.')
-#     parser.add_argument('-nepochs', '--nepochs', type=int, metavar='<epochs>', default=20,
-#                         help='Specify the number of epochs to train for.')
-#     parser.add_argument('-encoder_size', '--encs', type=int, metavar='<size>', default=2,
-#                 help='Set the number of encoder layers.') 
-#     parser.add_argument('-lr', '--lr', type=float, metavar='<size>', default=0.001,
-#                         help='Specify the learning rate.')
-#     parser.add_argument('-encoder_dropout', '--encoder_dropout', type=float, metavar='<size>', default=0.1,
-#                 help='Set the tunable dropout.')
-#     parser.add_argument('-decoder_dropout', '--decoder_dropout', type=float, metavar='<size>', default=0,
-#                 help='Set the tunable dropout.')
-#     parser.add_argument('-dim_model', '--dim_model', type=int, metavar='<size>', default=256,
-#                 help='Set the number of encoder layers.')
-#     parser.add_argument('-path', '--path', type=str, metavar='<cohort>', 
-#                         default='/data/abiomed_tmp/processed',
-#                         help='Specify the path to read data.')
-#     return parser.parse_args()
-
-
 def train(env, run, logger, seed, args):
 
     
     if args.data_path != "":
         with open(args.data_path, 'rb') as f:
             dataset = pickle.load(f)
+        # dataset = {k: v[:5] for k, v in dataset.items()}
     else:
-        dataset = env.get_dataset() 
-    #CHANGE
-    # dataset = {k: v[:5] for k, v in dataset.items()}
+        if args.task == "abiomed":
+            dataset = env.world_model.data_train
+            # dataset.data = dataset.data[:5]
+            # dataset.pl = dataset.pl[:5]
+            # dataset.labels = dataset.labels[:5]
+
+        else:
+            dataset = env.get_dataset() 
+    
 
     args.obs_shape = env.observation_space.shape
     args.action_dim = np.prod(env.action_space.shape)
@@ -174,18 +114,30 @@ def train(env, run, logger, seed, args):
                                      reward_penalty_coef = args.reward_penalty_coef,
                                      **config["transition_params"]
                                      )    
-      
+    
+    if args.task == "abiomed":
 
-    # create buffer
-    offline_buffer = ReplayBuffer(
+        # create buffer
+        offline_buffer = ReplayBuffer(
+            buffer_size = len(dataset.data),
+            obs_shape=args.obs_shape,
+            obs_dtype=np.float32,
+            action_dim=args.action_dim,
+            action_dtype=np.float32
+        )
+        #since dataset is not in RL format, it handles the transfer and defines buffer_size
+        offline_buffer.load_dataset(dataset, env) 
+    else:
+        offline_buffer = ReplayBuffer(
         buffer_size=len(dataset["observations"]),
         obs_shape=args.obs_shape,
         obs_dtype=np.float32,
         action_dim=args.action_dim,
         action_dtype=np.float32
-    )
+        )
 
-    offline_buffer.load_dataset(dataset)
+        offline_buffer.load_dataset(dataset)    
+
     model_buffer = ReplayBuffer(
         buffer_size=args.rollout_batch_size * args.rollout_length * args.model_retain_epochs,
         obs_shape=args.obs_shape,
@@ -238,14 +190,8 @@ def train(env, run, logger, seed, args):
     # begin train
     trainer.train_policy()
 
-    if args.task == "Abiomed-v0":
-        return  {
-            'rwd_stds': env.rwd_stds,
-            'rwd_means': env.rwd_means, 
-            'scaler': env.scaler
-            } , sac_policy, trainer, 
-    else:
-        return sac_policy, trainer
+   
+    return sac_policy, trainer
 
 if __name__ == "__main__":
     args = get_args()

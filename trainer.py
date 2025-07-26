@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 # import d4rl
+import copy 
 
 from tqdm import tqdm
 from common import util
@@ -138,38 +139,38 @@ class Trainer:
                     num_timesteps += 1
                     t.update(1)
             # evaluate current policy
-            if e % 50 == 0:
-                if self.env_name == 'Abiomed-v0':
-                    eval_info, _ = self.evaluate()
-                else:
-                    eval_info = self._evaluate()
+            if e % 10 == 0:
+                # if self.env_name == 'Abiomed-v0':
+                #     eval_info, _ = self.evaluate()
+                # else:
+                eval_info = self._evaluate()
                 ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
                 ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
                 
-                if self.env_name == 'Abiomed-v0':
-                    ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info["eval/episode_accuracy"]), np.std(eval_info["eval/episode_accuracy"])
-                    ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info["eval/episode_1_off_accuracy"]), np.std(eval_info["eval/episode_1_off_accuracy"])
+                # if self.env_name == 'Abiomed-v0':
+                #     ep_accuracy_mean, ep_accuracy_std = np.mean(eval_info["eval/episode_accuracy"]), np.std(eval_info["eval/episode_accuracy"])
+                #     ep_1_off_accuracy_mean, ep_1_off_accuracy_std = np.mean(eval_info["eval/episode_1_off_accuracy"]), np.std(eval_info["eval/episode_1_off_accuracy"])
             
                 
                 reward_l.append(ep_reward_mean)
                 reward_std_l.append(ep_reward_std)
-                if self.env_name == 'Abiomed-v0':
-                    acc_l.append(ep_accuracy_mean)
-                    off_acc.append(ep_1_off_accuracy_mean)
-                    acc_std_l.append(ep_accuracy_std)
-                    off_acc_std.append(ep_1_off_accuracy_std)
+                # if self.env_name == 'Abiomed-v0':
+                #     acc_l.append(ep_accuracy_mean)
+                #     off_acc.append(ep_1_off_accuracy_mean)
+                #     acc_std_l.append(ep_accuracy_std)
+                #     off_acc_std.append(ep_1_off_accuracy_std)
                 
                 self.logger.record("eval/episode_reward", ep_reward_mean, num_timesteps, printed=False)
                 self.logger.record("eval/episode_length", ep_length_mean, num_timesteps, printed=False)
-                if self.env_name == 'Abiomed-v0':
+                # if self.env_name == 'Abiomed-v0':
                     
-                    self.logger.record("eval/episode_accuracy", ep_accuracy_mean, num_timesteps, printed=False)
-                    self.logger.record("eval/episode_1_off_accuracy", ep_1_off_accuracy_mean, num_timesteps, printed=False)
-                    self.logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
-                                    episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f},\
-                                    episode_accuracy: {ep_accuracy_mean:.3f} ± {ep_accuracy_std:.3f},\
-                                    episode_1_off_accuracy: {ep_1_off_accuracy_mean:.3f} ± {ep_1_off_accuracy_std:.3f}"
-                                    )
+                    # self.logger.record("eval/episode_accuracy", ep_accuracy_mean, num_timesteps, printed=False)
+                    # self.logger.record("eval/episode_1_off_accuracy", ep_1_off_accuracy_mean, num_timesteps, printed=False)
+                    # self.logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
+                    #                 episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f},\
+                    #                 episode_accuracy: {ep_accuracy_mean:.3f} ± {ep_accuracy_std:.3f},\
+                    #                 episode_1_off_accuracy: {ep_1_off_accuracy_mean:.3f} ± {ep_1_off_accuracy_std:.3f}"
+                    #                 )
                 self.logger.print(f"Epoch #{e}: episode_reward: {ep_reward_mean:.3f} ± {ep_reward_std:.3f},\
                                 episode_length: {ep_length_mean:.3f} ± {ep_length_std:.3f}"
                                 )
@@ -178,7 +179,8 @@ class Trainer:
             model_save_dir = util.logger_model.log_path
             if not os.path.exists(model_save_dir):
                 os.makedirs(model_save_dir)
-            torch.save(self.algo.policy.state_dict(), os.path.join(model_save_dir, f"policy_{self.env_name}.pth"))
+            policy_copy = copy.deepcopy(self.algo.policy)
+            torch.save(policy_copy.to('cpu').state_dict(), os.path.join(model_save_dir, f"policy_{self.env_name}.pth")) 
         
         if self.run_id != 0:
             #plot q_values for each epoch
@@ -193,9 +195,9 @@ class Trainer:
             plot_p_loss(np.array(alpha_loss).reshape(-1,1), 'Alpha')
 
             plot_accuracy(np.array(reward_l), np.array(reward_std_l)/self._eval_episodes, 'Average Return')
-            if self.env_name == 'Abiomed-v0':
-                plot_accuracy(np.array(acc_l), np.array(acc_std_l)/self._eval_episodes, 'Accuracy')
-                plot_accuracy(np.array(off_acc), np.array(off_acc_std)/self._eval_episodes, '1-off Accuracy')
+            # if self.env_name == 'Abiomed-v0':
+            #     plot_accuracy(np.array(acc_l), np.array(acc_std_l)/self._eval_episodes, 'Accuracy')
+            #     plot_accuracy(np.array(off_acc), np.array(off_acc_std)/self._eval_episodes, '1-off Accuracy')
 
 
         self.logger.print("total time: {:.3f}s".format(time.time() - start_time))

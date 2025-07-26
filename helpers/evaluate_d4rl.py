@@ -25,12 +25,8 @@ from common import util
 import warnings
 warnings.filterwarnings("ignore")
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from noisy_mujoco.wrappers import (
-                        RandomNormalNoisyActions, 
-                        RandomNormalNoisyTransitions,
-                        RandomNormalNoisyTransitionsActions
-                        )
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 
 # from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
 
@@ -123,6 +119,10 @@ def _evaluate(policy, eval_env, episodes):
             obs = next_obs
 
             if terminal or truncated:
+                eval_ep_info_buffer.append(
+                    {"episode_reward": episode_reward, "episode_length": episode_length}
+                ) 
+                
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
                 # if args.task[0].isupper():

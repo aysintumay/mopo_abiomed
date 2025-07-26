@@ -54,7 +54,7 @@ def get_args():
                     help="Which GPU device index to use"
                 )
 
-    parser.add_argument("--task", type=str, default="OfflineHopperVelocity-v1")
+    parser.add_argument("--task", type=str, default="abiomed")
     parser.add_argument("--seeds", type=int, nargs='+', default=[1,2,3])
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
@@ -69,9 +69,9 @@ def get_args():
     parser.add_argument("--dynamics-lr", type=float, default=0.001)
     parser.add_argument("--n-ensembles", type=int, default=7)
     parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=5e-3) #1e=6
+    parser.add_argument("--reward-penalty-coef", type=float, default=0.0) #1e=6
     parser.add_argument("--rollout-length", type=int, default=5) #1 
-    parser.add_argument("--rollout-batch-size", type=int, default=50000) #50000
+    parser.add_argument("--rollout-batch-size", type=int, default=10000) #50000
     parser.add_argument("--rollout-freq", type=int, default=1000)
     parser.add_argument("--model-retain-epochs", type=int, default=5)
     parser.add_argument("--real-ratio", type=float, default=0.05)
@@ -117,7 +117,12 @@ def get_args():
     parser.add_argument("--scale_transition", type=float, default=0.001, help="Standard deviation of the transition noise distribution")
     parser.add_argument("--action", action='store_true', help="Create dataset with noisy actions")
     parser.add_argument("--transition", action='store_true', help="Create dataset with noisy transitions")
-    
+    #============ abiomed environment arguments ============
+    parser.add_argument("--model_name", type=str, default="10min_1hr_window")
+    parser.add_argument("--model_path_wm", type=str, default=None)
+    parser.add_argument("--data_path_wm", type=str, default=None)
+    parser.add_argument("--max_steps", type=int, default=24)
+
     parser.add_argument(
         '--root-dir', 
         #default='log/hopper-medium-replay-v0/mopo',
@@ -150,7 +155,6 @@ def main(args):
         # log
         t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
         log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-        # log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
         log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
         model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
@@ -163,22 +167,24 @@ def main(args):
         set_device_and_logger(Devid, logger, model_logger)
 
         args.model_path = model_path
-        args.pretrained = True #to be fast
         args.data_name = 'train'
         # create env and dataset
 
-        #====old======
+     
         scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
-        if args.task == "Abiomed-v0":
-            gym.envs.registration.register(
-            id='Abiomed-v0',
-            entry_point='abiomed_env:AbiomedEnv',  
-            max_episode_steps = 1000,
-            )
-            kwargs = {"args": args, "logger": logger, 'scaler_info': scaler_info}
-            env = gym.make(args.task, **kwargs)
-            dataset = env.qlearning_dataset()
-        #=====old======
+        if args.task == 'abiomed':
+            env = AbiomedRLEnvFactory.create_env(
+                                        model_name=args.model_name,
+                                        model_path=args.model_path_wm,
+                                        data_path=args.data_path_wm,
+                                        max_steps=args.max_steps,
+                                        action_space_type="continuous",
+                                        reward_type="smooth",
+                                        normalize_rewards=False,
+                                        seed=42
+                                        )
+            # dataset = env.world_model.data_train
+      
         else:
             env = gym.make(args.task)
             
@@ -204,44 +210,42 @@ def main(args):
 
 
         
-        if args.task == 'Abiomed-v0':
-            scaler_info, policy, trainer = train(run, logger, seed, args)
-            args.data_name = 'test'
-            args.pretrained = True
-            eval_info = test(trainer, policy, run, logger, model_logger, scaler_info, seed, args)
-
-            #will integrate in get_eval function
-            mean_return = np.mean(eval_info["eval/episode_reward"])
-            std_return = np.std(eval_info["eval/episode_reward"])
-            mean_length = np.mean(eval_info["eval/episode_length"])
-            std_length = np.std(eval_info["eval/episode_length"])
-            mean_accuracy = np.mean(eval_info["eval/episode_accuracy"])
-            std_accuracy = np.std(eval_info["eval/episode_accuracy"])
-            mean_1_off_accuracy = np.mean(eval_info["eval/episode_1_off_accuracy"])
-            std_1_off_accuracy = np.std(eval_info["eval/episode_1_off_accuracy"])
-            results.append({
-                'seed': seed,
-                'mean_return': mean_return,
-                'std_return': std_return,
-                'mean_length': mean_length,
-                'std_length': std_length,
-                'mean_accuracy': mean_accuracy,
-                'std_accuracy': std_accuracy,
-                'mean_1_off_accuracy': mean_1_off_accuracy,
-                'std_1_off_accuracy': std_1_off_accuracy,
-
-            })
+        # if args.task == 'Abiomed-v0':
+        #     policy, trainer = train(run, logger, seed, args)
             
-            print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
-        else:
-            policy, trainer = train(env, run, logger, seed, args)
-            trainer.algo.save_dynamics_model(f"dynamics_model")
 
-            # TODO: DSRL incompatibility with inner environment wrappers
-            # results.append(evaluate_d4rl(policy, env, args.eval_episodes))
-            eval_res = evaluate_d4rl(policy, env, args.eval_episodes)
-            eval_res['seed']= seed
-            results.append(eval_res)
+        #     #will integrate in get_eval function
+        #     mean_return = np.mean(eval_info["eval/episode_reward"])
+        #     std_return = np.std(eval_info["eval/episode_reward"])
+        #     mean_length = np.mean(eval_info["eval/episode_length"])
+        #     std_length = np.std(eval_info["eval/episode_length"])
+        #     mean_accuracy = np.mean(eval_info["eval/episode_accuracy"])
+        #     std_accuracy = np.std(eval_info["eval/episode_accuracy"])
+        #     mean_1_off_accuracy = np.mean(eval_info["eval/episode_1_off_accuracy"])
+        #     std_1_off_accuracy = np.std(eval_info["eval/episode_1_off_accuracy"])
+        #     results.append({
+        #         'seed': seed,
+        #         'mean_return': mean_return,
+        #         'std_return': std_return,
+        #         'mean_length': mean_length,
+        #         'std_length': std_length,
+        #         'mean_accuracy': mean_accuracy,
+        #         'std_accuracy': std_accuracy,
+        #         'mean_1_off_accuracy': mean_1_off_accuracy,
+        #         'std_1_off_accuracy': std_1_off_accuracy,
+
+        #     })
+            
+        #     print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
+        # else:
+        policy, trainer = train(env, run, logger, seed, args)
+        trainer.algo.save_dynamics_model(f"dynamics_model")
+
+        # TODO: DSRL incompatibility with inner environment wrappers
+        # results.append(evaluate_d4rl(policy, env, args.eval_episodes))
+        eval_res = evaluate_d4rl(policy, env, args.eval_episodes)
+        eval_res['seed']= seed
+        results.append(eval_res)
         
 
         
