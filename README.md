@@ -14,7 +14,7 @@ The performance of model-based RL algorithm greatly depends on the implementatio
 # Usage
 
 ## DSRL Implementation
-outside the mopo directory run:
+outside the project directory run:
 ```
 python mopo_abiomed/mopo.py --algo-name mbpo --pretrained False  --task OfflineHopperVelocity-v1  --seed 1 --reward-penalty-coef 0.0 --rollout-length 5 --epoch 100 --devid 7
 python mopo_abiomed/mopo.py --algo-name mopo --pretrained False  --task OfflineHopperVelocity-v1  --seed 1 --reward-penalty-coef 1.0 --rollout-length 5 --epoch 100 --devid 7
@@ -25,6 +25,13 @@ python mopo_abiomed/mopo.py --algo-name mopo --pretrained False  --task OfflineH
 
 ```
 python abiomed_mopo/mopo.py --algo-name mbpo --task abiomed --reward-penalty-coef 0.0 --epoch 100
+```
+
+## Evaluate
+Evalute a saved policy. Run outside the project directory.
+
+```
+python mopo_abiomed/helpers/evaluate_d4rl.py --algo-name mopo --devid 1 --task abiomed --seed 1 --policy_path "mopo_abiomed/saved_models/abiomed/mopo/seed_1_0726_022349-abiomed_mopo/policy_abiomed.pth"
 ```
 
 ## Baselines

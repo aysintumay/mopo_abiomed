@@ -25,10 +25,13 @@ from common import util
 import warnings
 warnings.filterwarnings("ignore")
 
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-
-# from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from noisy_mujoco.wrappers import (
+                        RandomNormalNoisyActions, 
+                        RandomNormalNoisyTransitions,
+                        RandomNormalNoisyTransitionsActions
+                        )
+from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
 
 
 """
@@ -49,9 +52,9 @@ def get_mopo():
     # import configs
     task = args.task.split('-')[0]
     import_path = f"static_fns.{task.lower()}"
-    static_fns = importlib.import_module(import_path).StaticFns
+    # static_fns = importlib.import_module(import_path).StaticFns
     config_path = f"config.{task.lower()}"
-    config = importlib.import_module(config_path).default_config
+    # config = importlib.import_module(config_path).default_config
     # create policy model
     actor_backbone = MLP(input_dim=np.prod(args.obs_shape), hidden_dims=[256, 256])
     critic1_backbone = MLP(input_dim=np.prod(args.obs_shape) + args.action_dim, hidden_dims=[256, 256])
@@ -126,12 +129,14 @@ def _evaluate(policy, eval_env, episodes):
                 num_episodes +=1
                 episode_reward, episode_length = 0, 0
                 # if args.task[0].isupper():
+
                 obs, _ = eval_env.reset()
                 # else:
                 #     obs = eval_env.reset()
         eval_info = {
                             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
-                            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
+                            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer],
+
                         }
 
         ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
@@ -147,28 +152,39 @@ def _evaluate(policy, eval_env, episodes):
 
 
 def get_env():
-    if args.task[0].isupper():
-        env = gy.make(args.task) #get the norm_info 
+    if args.task.lower()=="abiomed":
+        env = AbiomedRLEnvFactory.create_env(
+                                        model_name=args.model_name,
+                                        model_path=args.model_path_wm,
+                                        data_path=args.data_path_wm,
+                                        max_steps=args.max_steps,
+                                        action_space_type="continuous",
+                                        reward_type="smooth",
+                                        normalize_rewards=False,
+                                        seed=42
+                                        )
+        args.obs_shape = env.observation_space.shape[0]
+        args.action_dim = env.action_space.shape[0]
     else:
         env = gym.make(args.task)
-    args.obs_shape = env.observation_space.shape
-    args.action_dim = np.prod(env.action_space.shape)
+        args.obs_shape = env.observation_space.shape
+        args.action_dim = np.prod(env.action_space.shape)
 
-    if args.action and not args.transition:
-        print("Environment with noisy actions")
-        noisy_env = RandomNormalNoisyActions(env=env, noise_rate=args.noise_rate_action, loc = args.loc, scale = args.scale_action)
-    elif args.transition and not args.action:
-        print("Environment with noisy transitions")
-        noisy_env = RandomNormalNoisyTransitions(env=env, noise_rate=args.noise_rate_transition, loc = args.loc, scale = args.scale_transition)
-    elif args.transition and args.action:
-        print("Environment with noisy actions and transitions")
-        noisy_env = RandomNormalNoisyTransitionsActions(env=env, noise_rate_action=args.noise_rate_action, loc = args.loc, scale_action = args.scale_action,\
-                                                        noise_rate_transition=args.noise_rate_transition, scale_transition = args.scale_transition)
-    else:
-        print("Environment without noise")
-        noisy_env = env
+        if args.action and not args.transition:
+            print("Environment with noisy actions")
+            env = RandomNormalNoisyActions(env=env, noise_rate=args.noise_rate_action, loc = args.loc, scale = args.scale_action)
+        elif args.transition and not args.action:
+            print("Environment with noisy transitions")
+            env = RandomNormalNoisyTransitions(env=env, noise_rate=args.noise_rate_transition, loc = args.loc, scale = args.scale_transition)
+        elif args.transition and args.action:
+            print("Environment with noisy actions and transitions")
+            env = RandomNormalNoisyTransitionsActions(env=env, noise_rate_action=args.noise_rate_action, loc = args.loc, scale_action = args.scale_action,\
+                                                            noise_rate_transition=args.noise_rate_transition, scale_transition = args.scale_transition)
+        else:
+            print("Environment without noise")
+            env = env
 
-    return noisy_env
+    return env
 
 def mopo_args(parser):
     g = parser.add_argument_group("MOPO hyperparameters")
@@ -233,10 +249,8 @@ if __name__ == "__main__":
                 )
 
     parser.add_argument("--seed", type=int, default=1)
-    
     parser.add_argument("--eval_episodes", type=int, default=1000)
-    
-    parser.add_argument("--terminal_counter", type=int, default=1) 
+    # parser.add_argument("--terminal_counter", type=int, default=1) 
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--log-freq", type=int, default=1000)
     # parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
@@ -264,7 +278,12 @@ if __name__ == "__main__":
     parser.add_argument('-path', '--path', type=str, metavar='<cohort>', 
                         default='/data/abiomed_tmp/processed',
                         help='Specify the path to read data.')
-    
+    #=================Abiomed Environment Arguments================
+    parser.add_argument("--model_name", type=str, default="10min_1hr_window")
+    parser.add_argument("--model_path_wm", type=str, default=None)
+    parser.add_argument("--data_path_wm", type=str, default=None)
+    parser.add_argument("--max_steps", type=int, default=24)
+    #===============Noisy Environment Arguments================
     parser.add_argument("--noise_rate_action", type=float, help="Portion of action to be noisy with probability", default=0.01)
     parser.add_argument("--noise_rate_transition", type=float, help="Portion of transitions to be noisy with probability", default=0.01)
     parser.add_argument("--loc", type=float, default=0.0, help="Mean of the noise distribution")
@@ -316,10 +335,10 @@ if __name__ == "__main__":
     
     policy.load_state_dict(policy_state_dict)
     eval_info = _evaluate(policy, env, args.eval_episodes) 
-    mean_return = np.mean(eval_info["eval/episode_reward"])
-    std_return = np.std(eval_info["eval/episode_reward"])
-    mean_length = np.mean(eval_info["eval/episode_length"])
-    std_length = np.std(eval_info["eval/episode_length"])
+    mean_return = eval_info["mean_return"]
+    std_return = eval_info["std_return"]
+    mean_length = eval_info["mean_length"]
+    std_length = eval_info["std_length"]
   
     results.append({
         # 'seed': seed,
