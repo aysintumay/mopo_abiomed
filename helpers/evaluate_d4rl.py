@@ -204,7 +204,7 @@ def _evaluate(policy, eval_env, episodes, plot=None):
             next_state_l.append(obs)
             if (num_episodes == 1) and plot:
                 plot_policy(eval_env, next_state_l[1:], all_states)
-                
+
             episode_reward, episode_length = 0, 0
 
             obs, _ = eval_env.reset()
@@ -225,16 +225,16 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     
     print(f"Mean ACP across all timesteps in all episodes: {timestep_acp_mean:.5f}")
     total_acp /= num_episodes
-    print(f"Mean ACP per episode: {total_acp:.5f}")
+    print(f"Mean ACP over episodes: {total_acp:.5f}")
 
     final_avg_air_map = total_map_air_sum / num_episodes
-    print(f"MAP AIR per episode: {final_avg_air_map:.5f}")
+    print(f"MAP AIR over episodes: {final_avg_air_map:.5f}")
 
     final_avg_air_hr = total_hr_air_sum / num_episodes
-    print(f"HR AIR per episode: {final_avg_air_hr:.5f}")
+    print(f"HR AIR over episodes: {final_avg_air_hr:.5f}")
 
     final_avg_air_pulsatility = total_pulsatility_air_sum / num_episodes
-    print(f"Pulsatility AIR per episode: {final_avg_air_pulsatility:.5f}")
+    print(f"Pulsatility AIR over episodes: {final_avg_air_pulsatility:.5f}")
 
     unsafe_hours = total_unstable_percentage_sum/num_episodes
     print(f"Total unstable hours {unsafe_hours}%")
@@ -243,7 +243,7 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     print(f"Weaning score: {final_avg_wean_score}")
 
     final_aggregate_air = total_aggregate_air_sum/num_episodes
-    print(f"Aggregate AIR per episode: {final_aggregate_air}")
+    print(f"Aggregate AIR over episodes: {final_aggregate_air}")
     
     print("---------------------------------------")
     print(f"Evaluation over {ep_length_mean} episodes:")
