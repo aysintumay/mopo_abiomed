@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tqdm
 import argparse
-
+import wandb
 from tensorboard.backend.event_processing import event_accumulator
 
 COLORS = (
@@ -171,6 +171,63 @@ def plot_histogram(data, y_label,):
     out_file = os.path.join(args.output_path, f'{y_label}.png')
     plt.savefig(out_file, dpi=args.dpi, bbox_inches='tight')
     plt.show()
+
+
+def plot_policy(eval_env, state, all_states):
+	"""
+	
+	Plot the policy for the given state and environment.
+	Args: 
+		eval_env: The evaluation environment.
+		state ([max_steps, forecast_horizon*num_features]): The predicted state to plot. Includes the first p-level.
+		all_states ([max_steps+1, forecast_horizon*num_features]): The real states including the first inputted state.
+		writer: The writer to log the plot.
+	"""
+
+	input_color = 'tab:blue'
+	pred_color = 'tab:orange' #label="input",
+	gt_color = 'tab:green'
+	rl_color = 'tab:red'
+
+	
+	max_steps = eval_env.max_steps
+	forecast_n = eval_env.world_model.forecast_horizon
+	action_unnorm  = np.repeat(eval_env.episode_actions,forecast_n)
+	
+
+	state_unnorm = eval_env.world_model.unnorm_output(np.array(state).reshape(max_steps, forecast_n, -1))
+	all_state_unnorm = eval_env.world_model.unnorm_output(np.array(all_states).reshape(max_steps+1, forecast_n, -1))
+	first_action_unnorm = state_unnorm[0,:,-1] #normalized
+
+	fig, ax1 = plt.subplots(figsize = (8,5.8), dpi=300)
+									
+	default_x_ticks = range(0, 181, 18)
+	x_ticks = np.array(list(range(0, 31, 3)))
+	plt.xticks(default_x_ticks, x_ticks)
+	x1 = len(all_state_unnorm[0, :, 0].reshape(-1,1))
+	x2 = len(all_state_unnorm[1:, :, 0].reshape(-1,1))
+	ax1.axvline(x=x1, linestyle='--', c='black', alpha =0.7)
+	
+
+	line_obs, = ax1.plot(range(0, x1+x2), all_state_unnorm[:, :, 0].reshape(-1,1), label ='Observed MAP', color=gt_color)
+	line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), label ='Predicted MAP', color=pred_color)
+	ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+	line_pl1, = ax2.plot(range(0, x1+1), np.append(first_action_unnorm.reshape(-1), first_action_unnorm[-1]), '--', label ='Input PL', color=input_color)
+	line_pl2, = ax2.plot(range(x1, x1+x2), action_unnorm.reshape(-1,1),'--',label ='Recommended PL', color=rl_color)
+	
+
+	# Combined legend for all lines
+	lines = [line_obs, line_pred1, line_pl1, line_pl2]
+	labels = ['Observed MAP', 'Predicted MAP', 'Input PL', 'Recommended PL']
+	ax1.legend(lines, labels, loc='upper right', bbox_to_anchor=(1.0, 1.0), ncol=2, fontsize='small')
+
+	ax1.set_ylabel('MAP (mmHg)',  )
+	ax2.set_ylabel('P-level',  )
+	ax1.set_xlabel('Time (hour)',)
+	ax1.set_title(f"MAP Prediction and P-level")
+	wandb.log({f"eval_sample": wandb.Image(fig)})
+
+	plt.close(fig)
 
 
 if __name__ == '__main__':
