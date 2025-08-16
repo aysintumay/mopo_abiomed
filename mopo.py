@@ -118,10 +118,10 @@ def get_args():
     parser.add_argument("--action", action='store_true', help="Create dataset with noisy actions")
     parser.add_argument("--transition", action='store_true', help="Create dataset with noisy transitions")
     #============ abiomed environment arguments ============
-    parser.add_argument("--model_name", type=str, default="10min_1hr_window")
+    parser.add_argument("--model_name", type=str, default="10min_1hr_all_data")
     parser.add_argument("--model_path_wm", type=str, default=None)
     parser.add_argument("--data_path_wm", type=str, default=None)
-    parser.add_argument("--max_steps", type=int, default=24)
+    parser.add_argument("--max_steps", type=int, default=6)
     parser.add_argument("--fs", action="store_true", help = "doing feature selection")
 
 
