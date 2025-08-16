@@ -42,15 +42,29 @@ class ReplayBuffer:
         self.size = min(self.size + 1, self.max_size)
 
     def load_dataset(self, dataset, env=None):
-        if not isinstance(dataset, dict):
+        if not isinstance(dataset, dict): #check if the dta is d4rl
+            if isinstance(dataset, tuple): #merge train val and test sets 
+			
+                all_x = torch.cat([dataset[0].data, dataset[1].data, dataset[2].data], axis=0)
+                all_pl = torch.cat([dataset[0].pl, dataset[1].pl, dataset[2].pl], axis=0)
+                all_labels = torch.cat([dataset[0].labels, dataset[1].labels, dataset[2].labels], axis=0)
+            else:
+                all_x = dataset.data
+                all_pl = dataset.pl
+                all_labels = dataset.labels
+                
+            # if fs:
+            #     #select columns of 0 (MAP), 7 (PULSAT), 9 (HR) in all_x and all_labels
+            #     all_x = all_x[:,:,[0, 7, 9]]
+            #     all_labels = all_labels[:,:, [0, 7, 9]]
+            #     print("FEATURE SELECTION APPLIED FOR 0, 7, 9")
             reward_l = []
             done_l = []
-
-            observation = dataset.data.reshape(-1,self.timesteps*(self.feature_dim))
-            next_observation = torch.cat([dataset.labels.reshape(-1, self.timesteps, self.feature_dim-1), dataset.pl.reshape(-1, self.timesteps, 1)], axis = 2)
+            observation = all_x.reshape(-1,self.timesteps*(self.feature_dim))
+            next_observation = torch.cat([all_labels.reshape(-1, self.timesteps, self.feature_dim-1), all_pl.reshape(-1, self.timesteps, 1)], axis = 2)
             next_observation = next_observation.reshape(-1,self.timesteps*(self.feature_dim))
             
-            action = dataset.pl
+            action = all_pl
             #take one number with majority voting among 6 numbers
             action_unnorm = np.array(env.world_model.unnorm_pl(action))
             action = np.array([np.bincount(a.astype(int)).argmax() for a in action_unnorm]).reshape(-1,1)

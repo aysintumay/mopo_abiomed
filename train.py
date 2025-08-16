@@ -10,7 +10,7 @@ import pickle
 # import gym
 import dsrl
 # import d4rl
-import trash.abiomed_env as abiomed_env
+# import trash.abiomed_env as abiomed_env
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -39,7 +39,11 @@ def train(env, run, logger, seed, args):
         # dataset = {k: v[:5] for k, v in dataset.items()}
     else:
         if args.task == "abiomed":
-            dataset = env.world_model.data_train
+            dataset1 = env.world_model.data_train
+            dataset2 = env.world_model.data_val
+            dataset3 = env.world_model.data_test
+            dataset = (dataset1, dataset2, dataset3)
+            buffer_len  = len(dataset1.data) + len(dataset2.data) + len(dataset3.data)
             # dataset.data = dataset.data[:5]
             # dataset.pl = dataset.pl[:5]
             # dataset.labels = dataset.labels[:5]
@@ -119,14 +123,14 @@ def train(env, run, logger, seed, args):
 
         # create buffer
         offline_buffer = ReplayBuffer(
-            buffer_size = len(dataset.data),
+            buffer_size = buffer_len,
             obs_shape=args.obs_shape,
             obs_dtype=np.float32,
             action_dim=args.action_dim,
             action_dtype=np.float32
         )
         #since dataset is not in RL format, it handles the transfer and defines buffer_size
-        offline_buffer.load_dataset(dataset, env) 
+        offline_buffer.load_dataset(dataset, env, args.fs) 
     else:
         offline_buffer = ReplayBuffer(
         buffer_size=len(dataset["observations"]),

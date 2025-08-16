@@ -122,6 +122,8 @@ def get_args():
     parser.add_argument("--model_path_wm", type=str, default=None)
     parser.add_argument("--data_path_wm", type=str, default=None)
     parser.add_argument("--max_steps", type=int, default=24)
+    parser.add_argument("--fs", action="store_true", help = "doing feature selection")
+
 
     parser.add_argument(
         '--root-dir', 
