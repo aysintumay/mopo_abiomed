@@ -226,6 +226,7 @@ def plot_policy(eval_env, state, all_states):
 	ax2.set_ylabel('P-level',  )
 	ax1.set_xlabel('Time (hour)',)
 	ax1.set_title(f"MAP Prediction and P-level")
+    ax2.set_ylim(2, 10)
 	wandb.log({f"eval_sample": wandb.Image(fig)})
 
 	plt.close(fig)
