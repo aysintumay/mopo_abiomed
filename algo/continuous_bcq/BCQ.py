@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Dict, Any, Optional
 
 
 class Actor(nn.Module):
@@ -137,6 +138,8 @@ class BCQ(object):
 			state, action, next_state, reward, not_done = replay_buffer.sample(batch_size)
 
 			# Variational Auto-Encoder Training
+			# print(state)
+			# print(action)
 			recon, mean, std = self.vae(state, action)
 			recon_loss = F.mse_loss(recon, action)
 			KL_loss	= -0.5 * (1 + torch.log(std.pow(2)) - mean.pow(2) - std.pow(2)).mean()
@@ -191,3 +194,97 @@ class BCQ(object):
 			
 			# return actor loss
 		return actor_loss.item()
+
+	def _move_optimizer_state_(optimizer: torch.optim.Optimizer, device: torch.device):
+		for state in optimizer.state.values():
+			for k, v in state.items():
+				if isinstance(v, torch.Tensor):
+					state[k] = v.to(device)
+
+	# --------- NEW: save method ----------
+	def save(self, path: str, include_targets: bool = True, include_optim: bool = True,
+				extra: Optional[Dict[str, Any]] = None):
+		"""
+		Save BCQ (networks, optimizers, and hyperparams).
+		"""
+		chkpt = {
+			"version": "bcq.v1",
+			"actor": self.actor.state_dict(),
+			"critic": self.critic.state_dict(),
+			"vae": self.vae.state_dict(),
+			"hyperparams": {
+				"max_action": self.max_action,
+				"action_dim": self.action_dim,
+				"discount": self.discount,
+				"tau": self.tau,
+				"lmbda": self.lmbda,
+			},
+		}
+
+		if include_targets:
+			chkpt.update({
+				"actor_target": self.actor_target.state_dict(),
+				"critic_target": self.critic_target.state_dict(),
+			})
+
+		if include_optim:
+			chkpt.update({
+				"actor_optimizer": self.actor_optimizer.state_dict(),
+				"critic_optimizer": self.critic_optimizer.state_dict(),
+				"vae_optimizer": self.vae_optimizer.state_dict(),
+			})
+
+		if extra is not None:
+			chkpt["extra"] = extra
+
+		torch.save(chkpt, path)
+
+		# --------- NEW: classmethod load ----------
+		@classmethod
+		def load(cls, path: str, state_dim: int, action_dim: int, device: torch.device,
+				strict: bool = True):
+			"""
+			Load BCQ from a checkpoint created by `save`.
+			Rebuilds the object, restores weights, targets, and optimizers if present.
+			"""
+			chkpt = torch.load(path, map_location=device)
+
+			# Recreate model with saved hyperparams
+			hp = chkpt["hyperparams"]
+			model = cls(
+				state_dim=state_dim,
+				action_dim=action_dim,
+				max_action=hp["max_action"],
+				device=device,
+				discount=hp["discount"],
+				tau=hp["tau"],
+				lmbda=hp["lmbda"],
+			)
+
+			# Load primary networks
+			model.actor.load_state_dict(chkpt["actor"], strict=strict)
+			model.critic.load_state_dict(chkpt["critic"], strict=strict)
+			model.vae.load_state_dict(chkpt["vae"], strict=strict)
+
+			# Load target networks if available; otherwise sync from primaries
+			if "actor_target" in chkpt and "critic_target" in chkpt:
+				model.actor_target.load_state_dict(chkpt["actor_target"], strict=strict)
+				model.critic_target.load_state_dict(chkpt["critic_target"], strict=strict)
+			else:
+				model.actor_target.load_state_dict(model.actor.state_dict())
+				model.critic_target.load_state_dict(model.critic.state_dict())
+
+			# Load optimizers if available and move their states to device
+			if "actor_optimizer" in chkpt:
+				model.actor_optimizer.load_state_dict(chkpt["actor_optimizer"])
+				cls._move_optimizer_state_(model.actor_optimizer, device)
+
+			if "critic_optimizer" in chkpt:
+				model.critic_optimizer.load_state_dict(chkpt["critic_optimizer"])
+				cls._move_optimizer_state_(model.critic_optimizer, device)
+
+			if "vae_optimizer" in chkpt:
+				model.vae_optimizer.load_state_dict(chkpt["vae_optimizer"])
+				cls._move_optimizer_state_(model.vae_optimizer, device)
+
+			return model

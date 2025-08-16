@@ -10,14 +10,11 @@ import torch
 import pandas as pd
 from matplotlib import pyplot as plt
 import pickle
-# import gym
 import gymnasium as gym
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
-# from algo.mbpo import evaluate as evaluate_mbpo
 from helpers.evaluate_d4rl import _evaluate as evaluate_d4rl
-# from test import test
 from train import train
 from common.buffer import ReplayBuffer
 from common.logger import Logger
@@ -182,7 +179,8 @@ def main(args):
                                         action_space_type="continuous",
                                         reward_type="smooth",
                                         normalize_rewards=True,
-                                        seed=42
+                                        seed=42,
+                                        device= f"cuda:{Devid}" if torch.cuda.is_available() else "cpu"
                                         )
             # dataset = env.world_model.data_train
       
