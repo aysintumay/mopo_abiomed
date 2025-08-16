@@ -244,7 +244,7 @@ def main(args):
 
         # TODO: DSRL incompatibility with inner environment wrappers
         # results.append(evaluate_d4rl(policy, env, args.eval_episodes))
-        eval_res = evaluate_d4rl(policy, env, args.eval_episodes)
+        eval_res = evaluate_d4rl(policy, env, args.eval_episodes, plot=True)
         eval_res['seed']= seed
         results.append(eval_res)
         
