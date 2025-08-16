@@ -10,7 +10,6 @@ import pickle
 from matplotlib import pyplot as plt
 import dsrl
 import sys
-from plotter import plot_policy
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 # import gym
 import gymnasium as gym
@@ -23,6 +22,7 @@ from mopo_abiomed.algo.sac import SACPolicy
 from  mopo_abiomed.common.logger import Logger
 from  mopo_abiomed.common.util import set_device_and_logger
 from  mopo_abiomed.common import util
+from mopo_abiomed.helpers.plotter import plot_policy
 
 import warnings
 warnings.filterwarnings("ignore")

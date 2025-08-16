@@ -24,7 +24,7 @@ python mopo_abiomed/mopo.py --algo-name mopo --pretrained False  --task OfflineH
 ## Abiomed Implementation:
 
 ```
-python abiomed_mopo/mopo.py --algo-name mbpo --task abiomed --reward-penalty-coef 0.0 --epoch 100
+python mopo_abiomed/mopo.py --algo-name mbpo --task abiomed --reward-penalty-coef 0.0 --epoch 100
 ```
 
 ## Evaluate

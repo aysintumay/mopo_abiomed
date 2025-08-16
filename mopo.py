@@ -181,7 +181,7 @@ def main(args):
                                         max_steps=args.max_steps,
                                         action_space_type="continuous",
                                         reward_type="smooth",
-                                        normalize_rewards=False,
+                                        normalize_rewards=True,
                                         seed=42
                                         )
             # dataset = env.world_model.data_train
@@ -202,43 +202,7 @@ def main(args):
             else:
                 print("Environment without noise")
                 env = env
-            # env = wrap_env(
-            #         env=env,
-            #         reward_scale=1,
-            #     )
-            # env = OfflineEnvWrapper(env)
-
-
-
-        
-        # if args.task == 'Abiomed-v0':
-        #     policy, trainer = train(run, logger, seed, args)
-            
-
-        #     #will integrate in get_eval function
-        #     mean_return = np.mean(eval_info["eval/episode_reward"])
-        #     std_return = np.std(eval_info["eval/episode_reward"])
-        #     mean_length = np.mean(eval_info["eval/episode_length"])
-        #     std_length = np.std(eval_info["eval/episode_length"])
-        #     mean_accuracy = np.mean(eval_info["eval/episode_accuracy"])
-        #     std_accuracy = np.std(eval_info["eval/episode_accuracy"])
-        #     mean_1_off_accuracy = np.mean(eval_info["eval/episode_1_off_accuracy"])
-        #     std_1_off_accuracy = np.std(eval_info["eval/episode_1_off_accuracy"])
-        #     results.append({
-        #         'seed': seed,
-        #         'mean_return': mean_return,
-        #         'std_return': std_return,
-        #         'mean_length': mean_length,
-        #         'std_length': std_length,
-        #         'mean_accuracy': mean_accuracy,
-        #         'std_accuracy': std_accuracy,
-        #         'mean_1_off_accuracy': mean_1_off_accuracy,
-        #         'std_1_off_accuracy': std_1_off_accuracy,
-
-        #     })
-            
-        #     print(f"Seed {seed} - Mean Return: {mean_return:.2f} ± {std_return:.2f}")
-        # else:
+         
         policy, trainer = train(env, run, logger, seed, args)
         trainer.algo.save_dynamics_model(f"dynamics_model")
 
