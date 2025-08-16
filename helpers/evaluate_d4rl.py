@@ -10,28 +10,28 @@ import pickle
 from matplotlib import pyplot as plt
 import dsrl
 import sys
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 # import gym
 import gymnasium as gym
 # import d4rl
 import numpy as np
 import torch
-from models.policy_models import MLP, ActorProb, Critic, DiagGaussian
-from algo.sac import SACPolicy
-from common.logger import Logger
-from common.util import set_device_and_logger
-from common import util
+from mopo_abiomed.models.policy_models  import MLP, ActorProb, Critic, DiagGaussian
+from mopo_abiomed.algo.sac import SACPolicy
+from  mopo_abiomed.common.logger import Logger
+from  mopo_abiomed.common.util import set_device_and_logger
+from  mopo_abiomed.common import util
 
 import warnings
 warnings.filterwarnings("ignore")
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from noisy_mujoco.wrappers import (
                         RandomNormalNoisyActions, 
                         RandomNormalNoisyTransitions,
                         RandomNormalNoisyTransitionsActions
                         )
+                        
 from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
+from noisy_mujoco.abiomed_env.cost_func import compute_acp_cost, overall_acp_cost, compute_map_model_air, compute_hr_model_air, compute_pulsatility_model_air, aggregate_air_model, weaning_score_model, unstable_percentage_model
 
 
 """
@@ -101,27 +101,92 @@ def get_mopo():
     
     return sac_policy
 
+
+
 def _evaluate(policy, eval_env, episodes):
         
 
         eval_ep_info_buffer = []
         num_episodes = 0
-        episode_reward, episode_length = 0, 0
+        episode_reward, episode_length, episode_acp_cost = 0, 0, 0
+        total_map_air_sum = 0.0
+        total_hr_air_sum = 0.0
+        total_pulsatility_air_sum = 0.0
+
+
+        #added
+        actions = []
+        states = []
+        nondiscrete_actions =[]
+        total_map_air_sum = 0.0
+        total_hr_air_sum = 0.0
+        total_pulsatility_air_sum = 0.0
+        total_aggregate_air_sum = 0.0
+        total_unstable_percentage_sum = 0.0
+        wean_score = 0.0
 
         policy.eval()
         obs, _ = eval_env.reset()
+        ep_states = []
+        
 
         while num_episodes < episodes:
             action = policy.sample_action(obs, deterministic=True)
+
+            # wandb.log(log_data)
+            nondiscrete_actions.append(action)
             next_obs, reward, terminal, truncated,  _ = eval_env.step(action)
            
             
             episode_reward += reward
+
+            #added
             episode_length += 1
+            ep_states.append(obs)
 
             obs = next_obs
 
             if terminal or truncated:
+                #added
+                actions.append(eval_env.episode_actions)
+                states.append(ep_states)
+                
+                
+                #again this is just for visualization
+                episode_acp_cost = compute_acp_cost(eval_env.episode_actions)
+                episode_log_data = {
+                    "eval/episode_acp": episode_acp_cost
+                }
+                wandb.log(episode_log_data)
+                ep_states_np = np.array(ep_states)
+                print(ep_states_np.shape)
+                episode_map_cost = compute_map_model_air(env.world_model, ep_states_np, eval_env.episode_actions)
+                total_map_air_sum += episode_map_cost
+                nondiscrete_actions = []
+                
+                
+                episode_hr_cost = compute_hr_model_air(env.world_model, ep_states_np, eval_env.episode_actions)
+                total_hr_air_sum += episode_hr_cost
+
+                episode_pulsatility_cost = compute_pulsatility_model_air(env.world_model, ep_states_np, eval_env.episode_actions)
+                total_pulsatility_air_sum += episode_pulsatility_cost
+
+                episode_aggregate_cost = aggregate_air_model(env.world_model, ep_states_np,eval_env.episode_actions)
+                total_aggregate_air_sum += episode_aggregate_cost
+          
+                wean_score += weaning_score_model(env.world_model, ep_states_np, eval_env.episode_actions)
+
+                unstable_ep = unstable_percentage_model(env.world_model, ep_states_np)
+                total_unstable_percentage_sum += unstable_ep
+
+
+                episode_log_data = {
+                    "eval/episode_map_air": episode_map_cost,
+                    "eval/episode_hr_air": episode_hr_cost,
+                    "eval/episode_pulsatility_air": episode_pulsatility_cost
+                }
+                wandb.log(episode_log_data)
+
                 eval_ep_info_buffer.append(
                     {"episode_reward": episode_reward, "episode_length": episode_length}
                 ) 
@@ -131,17 +196,40 @@ def _evaluate(policy, eval_env, episodes):
                 # if args.task[0].isupper():
 
                 obs, _ = eval_env.reset()
+                ep_states = []
                 # else:
                 #     obs = eval_env.reset()
         eval_info = {
                             "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
-                            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer],
-
+                            "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
                         }
 
         ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
         ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
         print(f"Mean Return: {ep_reward_mean:.2f} ± {ep_reward_std:.2f}")
+
+        #added
+        timestep_acp_mean = overall_acp_cost(actions)
+        print(f"Mean ACP across all timesteps in all episodes: {timestep_acp_mean:.5f}")
+
+        final_avg_air_map = total_map_air_sum / num_episodes
+        print(f"MAP AIR per episode: {final_avg_air_map:.5f}")
+
+        final_avg_air_hr = total_hr_air_sum / num_episodes
+        print(f"HR AIR per episode: {final_avg_air_hr:.5f}")
+
+        final_avg_air_pulsatility = total_pulsatility_air_sum / num_episodes
+        print(f"Pulsatility AIR per episode: {final_avg_air_pulsatility:.5f}")
+
+        unsafe_hours = total_unstable_percentage_sum/num_episodes
+        print(f"Total unstable hours {unsafe_hours}%")
+
+        print(f"Weaning score: {wean_score}")
+
+        final_aggregate_air = total_aggregate_air_sum/num_episodes
+        print(f"Aggregate AIR per episode: {final_aggregate_air}")
+        
+
 
         return {    
                 'mean_return': ep_reward_mean,
@@ -152,7 +240,7 @@ def _evaluate(policy, eval_env, episodes):
 
 
 def get_env():
-    if args.task.lower()=="abiomed":
+    if "abiomed" in args.task.lower():
         env = AbiomedRLEnvFactory.create_env(
                                         model_name=args.model_name,
                                         model_path=args.model_path_wm,
@@ -161,7 +249,7 @@ def get_env():
                                         action_space_type="continuous",
                                         reward_type="smooth",
                                         normalize_rewards=False,
-                                        seed=42
+                                        seed=args.seed
                                         )
         args.obs_shape = env.observation_space.shape[0]
         args.action_dim = env.action_space.shape[0]
@@ -223,7 +311,7 @@ if __name__ == "__main__":
     base = argparse.ArgumentParser(add_help=False)
     base.add_argument(
         "--algo-name",
-        choices=["mbpo","mopo",'uambpo',"bcq","bc"],
+        choices=["mbpo","mopo",'uambpo',"bcq","bc","physician"],
         default="mbpo",
         help="Which algorithm’s flags to load"
     )
@@ -291,6 +379,8 @@ if __name__ == "__main__":
     parser.add_argument("--scale_transition", type=float, default=0.001, help="Standard deviation of the transition noise distribution")
     parser.add_argument("--action", action='store_true', help="Create dataset with noisy actions")
     parser.add_argument("--transition", action='store_true', help="Create dataset with noisy transitions")
+
+    
     
     if args_partial.algo_name == "mopo":
         mopo_args(parser)
@@ -298,6 +388,8 @@ if __name__ == "__main__":
         mopo_args(parser)
         
     elif args_partial.algo_name == "uambpo":
+        mopo_args(parser)
+    elif args_partial.algo_name == "physician":
         mopo_args(parser)
     # elif args_partial.algo_name == "bcq":
     #     bcq_args(parser)
@@ -313,6 +405,12 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
 
     t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
+    wandb.init(
+    project="mopo-eval",
+    name=f"eval_{args.task}_{args.algo_name}_{t0}",
+    config=vars(args)
+    )
+    
     log_file = f'seed_{args.seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
     # log_file = 'seed_1_0415_200911-walker2d_random_v0_mopo'
     log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
@@ -329,6 +427,7 @@ if __name__ == "__main__":
     # args.device = set_device_and_logger(Devid, logger, model_logger)
     
     env = get_env() 
+
     policy = get_mopo()
 
     policy_state_dict = torch.load(args.policy_path, map_location=args.device)
