@@ -239,52 +239,52 @@ class BCQ(object):
 
 		torch.save(chkpt, path)
 
-		# --------- NEW: classmethod load ----------
-		@classmethod
-		def load(cls, path: str, state_dim: int, action_dim: int, device: torch.device,
-				strict: bool = True):
-			"""
-			Load BCQ from a checkpoint created by `save`.
-			Rebuilds the object, restores weights, targets, and optimizers if present.
-			"""
-			chkpt = torch.load(path, map_location=device)
+	# --------- NEW: classmethod load ----------
+	@classmethod
+	def load(cls, path: str, state_dim: int, action_dim: int, device: torch.device,
+			strict: bool = True):
+		"""
+		Load BCQ from a checkpoint created by `save`.
+		Rebuilds the object, restores weights, targets, and optimizers if present.
+		"""
+		chkpt = torch.load(path, map_location=device)
 
-			# Recreate model with saved hyperparams
-			hp = chkpt["hyperparams"]
-			model = cls(
-				state_dim=state_dim,
-				action_dim=action_dim,
-				max_action=hp["max_action"],
-				device=device,
-				discount=hp["discount"],
-				tau=hp["tau"],
-				lmbda=hp["lmbda"],
-			)
+		# Recreate model with saved hyperparams
+		hp = chkpt["hyperparams"]
+		model = cls(
+			state_dim=state_dim,
+			action_dim=action_dim,
+			max_action=hp["max_action"],
+			device=device,
+			discount=hp["discount"],
+			tau=hp["tau"],
+			lmbda=hp["lmbda"],
+		)
 
-			# Load primary networks
-			model.actor.load_state_dict(chkpt["actor"], strict=strict)
-			model.critic.load_state_dict(chkpt["critic"], strict=strict)
-			model.vae.load_state_dict(chkpt["vae"], strict=strict)
+		# Load primary networks
+		model.actor.load_state_dict(chkpt["actor"], strict=strict)
+		model.critic.load_state_dict(chkpt["critic"], strict=strict)
+		model.vae.load_state_dict(chkpt["vae"], strict=strict)
 
-			# Load target networks if available; otherwise sync from primaries
-			if "actor_target" in chkpt and "critic_target" in chkpt:
-				model.actor_target.load_state_dict(chkpt["actor_target"], strict=strict)
-				model.critic_target.load_state_dict(chkpt["critic_target"], strict=strict)
-			else:
-				model.actor_target.load_state_dict(model.actor.state_dict())
-				model.critic_target.load_state_dict(model.critic.state_dict())
+		# Load target networks if available; otherwise sync from primaries
+		if "actor_target" in chkpt and "critic_target" in chkpt:
+			model.actor_target.load_state_dict(chkpt["actor_target"], strict=strict)
+			model.critic_target.load_state_dict(chkpt["critic_target"], strict=strict)
+		else:
+			model.actor_target.load_state_dict(model.actor.state_dict())
+			model.critic_target.load_state_dict(model.critic.state_dict())
 
-			# Load optimizers if available and move their states to device
-			if "actor_optimizer" in chkpt:
-				model.actor_optimizer.load_state_dict(chkpt["actor_optimizer"])
-				cls._move_optimizer_state_(model.actor_optimizer, device)
+		# Load optimizers if available and move their states to device
+		if "actor_optimizer" in chkpt:
+			model.actor_optimizer.load_state_dict(chkpt["actor_optimizer"])
+			cls._move_optimizer_state_(model.actor_optimizer, device)
 
-			if "critic_optimizer" in chkpt:
-				model.critic_optimizer.load_state_dict(chkpt["critic_optimizer"])
-				cls._move_optimizer_state_(model.critic_optimizer, device)
+		if "critic_optimizer" in chkpt:
+			model.critic_optimizer.load_state_dict(chkpt["critic_optimizer"])
+			cls._move_optimizer_state_(model.critic_optimizer, device)
 
-			if "vae_optimizer" in chkpt:
-				model.vae_optimizer.load_state_dict(chkpt["vae_optimizer"])
-				cls._move_optimizer_state_(model.vae_optimizer, device)
+		if "vae_optimizer" in chkpt:
+			model.vae_optimizer.load_state_dict(chkpt["vae_optimizer"])
+			cls._move_optimizer_state_(model.vae_optimizer, device)
 
-			return model
+		return model

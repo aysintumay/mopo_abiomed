@@ -185,9 +185,9 @@ def plot_policy(eval_env, state, all_states):
     """
 
     input_color = 'tab:blue'
-    pred_color = 'tab:orange' #label="input",
-    gt_color = 'tab:green'
-    rl_color = 'tab:red'
+    pred_color = 'tab:pink' #label="input",
+    gt_color = 'tab:red'
+    rl_color = 'darkblue'
 
 
     max_steps = eval_env.max_steps
@@ -210,12 +210,10 @@ def plot_policy(eval_env, state, all_states):
 
 
     line_obs, = ax1.plot(range(0, x1+x2), all_state_unnorm[:, :, 0].reshape(-1,1), label ='Observed MAP', color=gt_color)
-    line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), label ='Predicted MAP', color=pred_color)
+    line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), '--', label ='Predicted MAP', color=pred_color)
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-    line_pl1, = ax2.plot(range(0, x1+x2),  all_state_unnorm[:,:,-1].reshape(-1), '--', label ='Input PL', color=input_color)
+    line_pl1, = ax2.plot(range(0, x1+x2),  all_state_unnorm[:,:,-1].reshape(-1),  label ='Input PL', color=input_color)
     line_pl2, = ax2.plot(range(x1, x1+x2), action_unnorm.reshape(-1,1),'--',label ='Recommended PL', color=rl_color)
-
-
 
     # Combined legend for all lines
     lines = [line_obs, line_pred1, line_pl1, line_pl2]

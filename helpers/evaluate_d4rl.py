@@ -10,13 +10,16 @@ import pickle
 from matplotlib import pyplot as plt
 import dsrl
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-# import gym
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import algo.continuous_bcq.BCQ as BCQ
 import gymnasium as gym
+from bcq import eval_policy
 # import d4rl
 
 import numpy as np
 import torch
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from mopo_abiomed.models.policy_models  import MLP, ActorProb, Critic, DiagGaussian
 from mopo_abiomed.algo.sac import SACPolicy
 from  mopo_abiomed.common.logger import Logger
@@ -33,7 +36,15 @@ from noisy_mujoco.wrappers import (
                         )
                         
 from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
-from noisy_mujoco.abiomed_env.cost_func import compute_acp_cost, overall_acp_cost, compute_map_model_air, compute_hr_model_air, compute_pulsatility_model_air, aggregate_air_model, weaning_score_model, unstable_percentage_model
+from noisy_mujoco.abiomed_env.cost_func import (compute_acp_cost, 
+                                                overall_acp_cost, 
+                                                compute_map_model_air, 
+                                                compute_hr_model_air,
+                                                compute_pulsatility_model_air,
+                                                aggregate_air_model, 
+                                                weaning_score_model, 
+                                                unstable_percentage_model, 
+                                                super_metric)
 
 
 """
@@ -48,7 +59,7 @@ gym: < 0.26.3
 
 D4RL uses old gym whereas gymnasium uses the new Gymnasium API.
 """
-def get_mopo():
+def get_mopo(args):
 
 
     # import configs
@@ -100,10 +111,23 @@ def get_mopo():
         alpha=args.alpha,
         device=args.device
     )
-    
+    policy_state_dict = torch.load(args.policy_path, map_location=args.device)
+    sac_policy.load_state_dict(policy_state_dict)
     return sac_policy
 
+def get_bcq(env, args):
 
+    state_dim = env.observation_space.shape[0]
+    action_dim = env.action_space.shape[0] 
+    max_action = float(env.action_space.high[0])
+    
+    args.obs_shape = env.observation_space.shape
+    args.action_dim = np.prod(env.action_space.shape)
+    device = torch.device(args.devid if torch.cuda.is_available() else "cpu")
+
+    policy = BCQ.BCQ(state_dim, action_dim,  max_action, device, args.discount, args.tau, args.lmbda, args.phi)
+    policy.load(args.policy_path, state_dim, action_dim, device)
+    return policy
 
 def _evaluate(policy, eval_env, episodes, plot=None):
         
@@ -126,6 +150,7 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     total_pulsatility_air_sum = 0.0
     total_aggregate_air_sum = 0.0
     total_unstable_percentage_sum = 0.0
+    total_super = 0.0
     wean_score = 0.0
 
     policy.eval()
@@ -185,7 +210,7 @@ def _evaluate(policy, eval_env, episodes, plot=None):
 
             unstable_ep = unstable_percentage_model(env.world_model, ep_states_np)
             total_unstable_percentage_sum += unstable_ep
-
+            total_super    += super_metric(env.world_model, ep_states_np, eval_env.episode_actions)
 
             episode_log_data = {
                 "eval/episode_map_air": episode_map_cost,
@@ -225,25 +250,28 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     
     print(f"Mean ACP across all timesteps in all episodes: {timestep_acp_mean:.5f}")
     total_acp /= num_episodes
-    print(f"Mean ACP over episodes: {total_acp:.5f}")
+    # print(f"Mean ACP over episodes: {total_acp:.5f}")
 
     final_avg_air_map = total_map_air_sum / num_episodes
-    print(f"MAP AIR over episodes: {final_avg_air_map:.5f}")
+    # print(f"MAP AIR over episodes: {final_avg_air_map:.5f}")
 
     final_avg_air_hr = total_hr_air_sum / num_episodes
-    print(f"HR AIR over episodes: {final_avg_air_hr:.5f}")
+    # print(f"HR AIR over episodes: {final_avg_air_hr:.5f}")
 
     final_avg_air_pulsatility = total_pulsatility_air_sum / num_episodes
-    print(f"Pulsatility AIR over episodes: {final_avg_air_pulsatility:.5f}")
+    # print(f"Pulsatility AIR over episodes: {final_avg_air_pulsatility:.5f}")
 
     unsafe_hours = total_unstable_percentage_sum/num_episodes
-    print(f"Total unstable hours {unsafe_hours}%")
+    # print(f"Total unstable hours {unsafe_hours}%")
 
     final_avg_wean_score = wean_score/num_episodes
-    print(f"Weaning score: {final_avg_wean_score}")
+    # print(f"Weaning score: {final_avg_wean_score}")
 
     final_aggregate_air = total_aggregate_air_sum/num_episodes
-    print(f"Aggregate AIR over episodes: {final_aggregate_air}")
+    # print(f"Aggregate AIR over episodes: {final_aggregate_air}")
+    super_mean = total_super/num_episodes
+
+
     
     print("---------------------------------------")
     print(f"Evaluation over {ep_length_mean} episodes:")
@@ -254,6 +282,7 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     print(f"  Aggregate AIR/ep: {final_aggregate_air:.5f}")
     print(f"  Unstable hours (%): {unsafe_hours:.3f}")
     print(f"  Weaning score: {final_avg_wean_score:.5f}")
+    print(f"Super metric: {super_mean:.5f}")
     print("---------------------------------------")
 
     return {    
@@ -267,8 +296,8 @@ def _evaluate(policy, eval_env, episodes, plot=None):
             'mean_pulsatility_air': final_avg_air_pulsatility,
             'mean_aggregate_air': final_aggregate_air,
             'mean_unsafe_hours': unsafe_hours,
-            'mean_wean_score': final_avg_wean_score
-
+            'mean_wean_score': final_avg_wean_score,
+            'super_metric': super_mean
         }
 
 
@@ -281,8 +310,9 @@ def get_env():
                                         max_steps=args.max_steps,
                                         action_space_type="continuous",
                                         reward_type="smooth",
-                                        normalize_rewards=False,
-                                        seed=args.seed
+                                        normalize_rewards=True,
+                                        seed=args.seed,
+                                        device = args.device,
                                         )
         args.obs_shape = env.observation_space.shape[0]
         args.action_dim = env.action_space.shape[0]
@@ -337,7 +367,18 @@ def mopo_args(parser):
     #1000
     g.add_argument("--batch-size", type=int, default=256)
     return parser
-    
+
+def bcq_args(parser):
+    parser.add_argument("--eval_freq", default=2e4, type=float)     # How often (time steps) we evaluate
+    parser.add_argument("--max_timesteps", default=1e6, type=int)   # Max time steps to run environment or train for (this defines buffer size)
+    parser.add_argument("--rand_action_p", default=0.3, type=float) # Probability of selecting random action during batch generation
+    parser.add_argument("--gaussian_std", default=0.3, type=float)  # Std of Gaussian exploration noise (Set to 0.1 if DDPG trains poorly)
+    parser.add_argument("--batch_size", default=100, type=int)      # Mini batch size for networks
+    parser.add_argument("--discount", default=0.99)                 # Discount factor
+    parser.add_argument("--tau", default=0.005)                     # Target network update rate
+    parser.add_argument("--lmbda", default=0.75)                    # Weighting for clipped double Q-learning in BCQ
+    parser.add_argument("--phi", default=0.05)                      # Max perturbation hyper-parameter for BCQ
+    return parser
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -419,6 +460,8 @@ if __name__ == "__main__":
         mopo_args(parser)
     elif args_partial.algo_name == "physician":
         mopo_args(parser)
+    elif args_partial.algo_name == "bcq":
+        bcq_args(parser)
     # elif args_partial.algo_name == "bcq":
     #     bcq_args(parser)
     # else:
@@ -455,13 +498,12 @@ if __name__ == "__main__":
     # args.device = set_device_and_logger(Devid, logger, model_logger)
     
     env = get_env() 
-
-    policy = get_mopo()
-
-    policy_state_dict = torch.load(args.policy_path, map_location=args.device)
-    
-    policy.load_state_dict(policy_state_dict)
-    eval_info = _evaluate(policy, env, args.eval_episodes, plot=True) 
+    if args_partial.algo_name != "bcq":
+        policy = get_mopo(args)
+        eval_info = _evaluate(policy, env, args.eval_episodes, plot=True) # TODO:ADD D4RL EVALAUTION
+    elif args_partial.algo_name == "bcq":
+        policy = get_bcq(env, args)
+        eval_info = eval_policy(policy, env, args.task, args.eval_episodes, plot=True)
     mean_return = eval_info["mean_return"]
     std_return = eval_info["std_return"]
     mean_length = eval_info["mean_length"]
@@ -473,6 +515,7 @@ if __name__ == "__main__":
     mean_aggregate_air = eval_info["mean_aggregate_air"]
     mean_unsafe_hours = eval_info["mean_unsafe_hours"]
     mean_wean_score = eval_info["mean_wean_score"]
+    mean_super = eval_info["super_metric"]
 
   
     results.append({
@@ -487,7 +530,8 @@ if __name__ == "__main__":
         'mean_pulsatility_air': mean_pulsatility_air,
         'mean_aggregate_air': mean_aggregate_air,
         'mean_unsafe_hours': mean_unsafe_hours,
-        'mean_wean_score': mean_wean_score
+        'mean_wean_score': mean_wean_score,
+        'mean_super': mean_super,
 
     })
     

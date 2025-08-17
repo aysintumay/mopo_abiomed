@@ -119,7 +119,7 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
                 print('Train step:', training_iters)
                 pol_vals = policy.train(replay_buffer, iterations=int(args.eval_freq), batch_size=args.batch_size)
                 if training_iters % args.eval_freq == 0:
-                    ev = eval_policy(policy, env, args.task, seed, args.eval_episodes)
+                    ev = eval_policy(policy, env, args.task, args.eval_episodes)
                     evaluations.append(ev)
                 
                 print(f'Iteration {training_iters} Actor loss: {pol_vals:.2f}')
@@ -128,17 +128,17 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     #save model
     if not os.path.exists(os.path.join(output_dir, setting)):
         os.makedirs(os.path.join(output_dir, setting))
-    save_dir = os.path.join(output_dir, setting, f"bcq_{args.max_timesteps}")
+    save_dir = os.path.join(output_dir, setting, f"bcq_{args.max_timesteps}.pth")
     policy.save(save_dir)
     print(f"Training completed. Model saved to {save_dir}")
-    eval_final = eval_policy(policy, env, args.task, seed, eval_episodes=100, plot=True)
+    eval_final = eval_policy(policy, env, args.task, eval_episodes=100, plot=True)
     return eval_final
 
 
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
-def eval_policy(policy, eval_env, env_name, seed, eval_episodes=10, mean=0, std=1,
-                plot=False, writer=None):
+def eval_policy(policy, eval_env, env_name, eval_episodes=10, mean=0, std=1,
+                plot=False):
     """
     Unified evaluator:
       - Creates eval_env from env_name and seeds it.
@@ -227,16 +227,21 @@ def eval_policy(policy, eval_env, env_name, seed, eval_episodes=10, mean=0, std=
         print(f"Super metric: {super_mean:.5f}")
         print("---------------------------------------")
         return {
-                "avg_reward": avg_reward,
-                "acp": acp_mean,
-                "map_air": map_air,
-                "hr": hr_air,
-                "puls": puls_air,
-                "agg_air": agg_air,
-                "unstable_pct": unstable,
-                "weaning_score": weaning,
+                "mean_return": avg_reward,
+                'std_return': 0,
+                'mean_length': 6,
+                'std_length': 0,
+                "mean_acp": acp_mean,
+                "mean_map_air": map_air,
+                "mean_hr_air": hr_air,
+                "mean_pulsatility_air": puls_air,
+                "mean_aggregate_air": agg_air,
+                "mean_unsafe_hours": unstable,
+                "mean_wean_score": weaning,
                 "super_metric": super_mean,
         }
+
+
     else:
 
         avg_reward = 0.
