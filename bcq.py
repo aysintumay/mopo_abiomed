@@ -27,7 +27,7 @@ from noisy_mujoco.wrappers import (RandomNormalNoisyActions,
                                         RandomNormalNoisyTransitionsActions
                                     )
 from noisy_mujoco.abiomed_env.cost_func import (compute_acp_cost,
-                                                overall_acp_cost,
+                                                compute_acp_cost_model,
                                                 compute_map_model_air,
                                                 compute_hr_model_air,
                                                 compute_pulsatility_model_air,
@@ -95,8 +95,8 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
             dataset1 = env.world_model.data_train
             dataset2 = env.world_model.data_val
             dataset3 = env.world_model.data_test
-            dataset = (dataset1, dataset2, dataset3)
-            buffer_len  = len(dataset1.data) + len(dataset2.data) + len(dataset3.data)
+            dataset = [dataset1, dataset2, dataset3]
+            # buffer_len  = len(dataset1.data) + len(dataset2.data) # + len(dataset3.data)
             # dataset.data = dataset.data[:5]
             # dataset.pl = dataset.pl[:5]
             # dataset.labels = dataset.labels[:5]
@@ -128,9 +128,10 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     #save model
     if not os.path.exists(os.path.join(output_dir, setting)):
         os.makedirs(os.path.join(output_dir, setting))
-    save_dir = os.path.join(output_dir, setting, f"bcq_{args.max_timesteps}.pth")
+    t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
+    save_dir = os.path.join(output_dir, setting, f"bcq_{t0}_{args.max_timesteps}.pth")
     policy.save(save_dir)
-    print(f"Training completed. Model saved to {save_dir}")
+    print(f"Training completed. Model saved to {save_dir}.pth")
     eval_final = eval_policy(policy, env, args.task, eval_episodes=100, plot=True)
     return eval_final
 
@@ -167,8 +168,14 @@ def eval_policy(policy, eval_env, env_name, eval_episodes=10, mean=0, std=1,
 
         for k in range(eval_episodes):
             ep_states = []
-            (state, info), done = eval_env.reset(), False     # normalized state (env-specific)
+            if k==100:
+                (state, info), done = eval_env.reset(idx=k), False     # normalized state (env-specific)
+            else:
+                (state, info), done = eval_env.reset(), False
+
             all_states = info['all_states']                   # normalized
+            # print(all_states.shape)
+            # print(state.shape)
             all_states = np.concatenate([state.reshape(1, -1), all_states], axis=0)
             truncated = False
 
@@ -183,14 +190,14 @@ def eval_policy(policy, eval_env, env_name, eval_episodes=10, mean=0, std=1,
                 state = next_state
 
             # per-episode metrics
-            avg_acp += overall_acp_cost([eval_env.episode_actions])
+            
 
             ep_states_np = np.asarray(ep_states, dtype=np.float32)
 
             wm = getattr(eval_env, 'world_model', None)
             if wm is None:
                 wm = env.world_model  # fallback if world_model is global
-
+            avg_acp += compute_acp_cost_model(wm, eval_env.episode_actions, ep_states_np)
             total_map_air  += compute_map_model_air(wm, ep_states_np, eval_env.episode_actions)
             total_hr_air   += compute_hr_model_air(wm, ep_states_np, eval_env.episode_actions)
             total_puls_air += compute_pulsatility_model_air(wm, ep_states_np, eval_env.episode_actions)
@@ -200,11 +207,11 @@ def eval_policy(policy, eval_env, env_name, eval_episodes=10, mean=0, std=1,
             total_wean_score   += weaning_score_model(wm, ep_states_np, eval_env.episode_actions)
             total_unstable_pct += unstable_percentage_model(wm, ep_states_np)
 
-            if (k == 2) and plot:
+            if (k==100)and plot:
                 # Plot needs next-state aligned sequence; append final state
                 next_state_l = ep_states.copy()
                 next_state_l.append(state)
-                plot_policy(eval_env, next_state_l[1:], all_states)
+                plot_policy(eval_env, next_state_l[1:], all_states, 'BCQ')
 
         # Averages
         avg_reward /= eval_episodes

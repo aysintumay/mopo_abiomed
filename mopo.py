@@ -21,7 +21,6 @@ from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
 from common import util
-from dsrl.offline_env import OfflineEnvWrapper, wrap_env
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from noisy_mujoco.wrappers import (RandomNormalNoisyActions,
                                       RandomNormalNoisyTransitions,
@@ -42,7 +41,7 @@ def get_args():
     parser.add_argument("--mode", type=str, default="offline")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
     parser.add_argument("--policy_path" , type=str, default="")
-    parser.add_argument("--model_path" , type=str, default="saved_models")
+    parser.add_argument("--model_path" , type=str, default="/abiomed/models/policy_models")
     parser.add_argument("--data_path", type=str, default="")
     parser.add_argument(
                     "--devid", 
@@ -52,7 +51,7 @@ def get_args():
                 )
 
     parser.add_argument("--task", type=str, default="abiomed")
-    parser.add_argument("--seeds", type=int, nargs='+', default=[1,2,3])
+    parser.add_argument("--seeds", type=int, nargs='+', default=[1])
     parser.add_argument("--actor-lr", type=float, default=3e-4)
     parser.add_argument("--critic-lr", type=float, default=3e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -66,7 +65,7 @@ def get_args():
     parser.add_argument("--dynamics-lr", type=float, default=0.001)
     parser.add_argument("--n-ensembles", type=int, default=7)
     parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=0.0) #1e=6
+    parser.add_argument("--reward-penalty-coef", type=float, default=0.5) #1e=6
     parser.add_argument("--rollout-length", type=int, default=5) #1 
     parser.add_argument("--rollout-batch-size", type=int, default=10000) #50000
     parser.add_argument("--rollout-freq", type=int, default=1000)
@@ -74,9 +73,9 @@ def get_args():
     parser.add_argument("--real-ratio", type=float, default=0.05)
     parser.add_argument("--dynamics-model-dir", type=str, default=None)
 
-    parser.add_argument("--epoch", type=int, default=1) #1000
+    parser.add_argument("--epoch", type=int, default=100) #1000
     parser.add_argument("--step-per-epoch", type=int, default=1000) #1000
-    parser.add_argument("--eval_episodes", type=int, default=1000)
+    parser.add_argument("--eval_episodes", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--terminal_counter", type=int, default=1) 
     parser.add_argument("--logdir", type=str, default="log")
@@ -135,7 +134,7 @@ def get_args():
 
 
 def main(args):
-
+    print("ROLLOUT BATCH SIZE", args.rollout_batch_size)
     run = wandb.init(
                 project=args.task,
                 group=args.algo_name,
@@ -155,7 +154,7 @@ def main(args):
         log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
         log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
 
-        model_path = os.path.join(args.model_path, args.task, args.algo_name, log_file)
+        model_path = os.path.join(args.model_path, args.algo_name, args.task, log_file)
         writer = SummaryWriter(log_path)
         writer.add_text("args", str(args))
         logger = Logger(writer=writer,log_path=log_path)
@@ -204,9 +203,8 @@ def main(args):
         policy, trainer = train(env, run, logger, seed, args)
         trainer.algo.save_dynamics_model(f"dynamics_model")
 
-        # TODO: DSRL incompatibility with inner environment wrappers
         # results.append(evaluate_d4rl(policy, env, args.eval_episodes))
-        eval_res = evaluate_d4rl(policy, env, args.eval_episodes, plot=True)
+        eval_res = evaluate_d4rl(policy, env, args.eval_episodes, args=args, plot=True)
         eval_res['seed']= seed
         results.append(eval_res)
         

@@ -24,7 +24,8 @@ from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
 from common import util
-
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 # from noisy_mujoco.abiomed_env import AbiomedEnv
 
@@ -42,8 +43,9 @@ def train(env, run, logger, seed, args):
             dataset1 = env.world_model.data_train
             dataset2 = env.world_model.data_val
             dataset3 = env.world_model.data_test
-            dataset = (dataset1, dataset2, dataset3)
+            dataset = [dataset1, dataset2, dataset3]
             buffer_len  = len(dataset1.data) + len(dataset2.data) + len(dataset3.data)
+            # buffer_len  = len(dataset.data) 
             # dataset.data = dataset.data[:5]
             # dataset.pl = dataset.pl[:5]
             # dataset.labels = dataset.labels[:5]
@@ -85,7 +87,7 @@ def train(env, run, logger, seed, args):
     critic2_optim = torch.optim.Adam(critic2.parameters(), lr=args.critic_lr)
 
     if args.auto_alpha:
-        # target_entropy = args.target_entropy if args.target_entropy \
+        # target_entropy = args.target_entropy if args.target _entropy \
         #     else -np.prod(env.action_space.shape)
         target_entropy = -np.prod(env.action_space.shape)
         args.target_entropy = target_entropy
@@ -130,7 +132,7 @@ def train(env, run, logger, seed, args):
             action_dtype=np.float32
         )
         #since dataset is not in RL format, it handles the transfer and defines buffer_size
-        offline_buffer.load_dataset(dataset, env, args.fs) 
+        offline_buffer.load_dataset(dataset, env) 
     else:
         offline_buffer = ReplayBuffer(
         buffer_size=len(dataset["observations"]),
@@ -149,7 +151,7 @@ def train(env, run, logger, seed, args):
         action_dim=args.action_dim,
         action_dtype=np.float32
     )
-
+    
     # create MOPO algo
     algo = MOPO(
         sac_policy,

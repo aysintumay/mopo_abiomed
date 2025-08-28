@@ -43,21 +43,18 @@ class ReplayBuffer:
 
     def load_dataset(self, dataset, env=None):
         if not isinstance(dataset, dict): #check if the dta is d4rl
-            if isinstance(dataset, tuple): #merge train val and test sets 
-			
+            if isinstance(dataset, list):
+                
                 all_x = torch.cat([dataset[0].data, dataset[1].data, dataset[2].data], axis=0)
                 all_pl = torch.cat([dataset[0].pl, dataset[1].pl, dataset[2].pl], axis=0)
                 all_labels = torch.cat([dataset[0].labels, dataset[1].labels, dataset[2].labels], axis=0)
+               
+                print(all_x.shape, all_pl.shape, all_labels.shape)
             else:
                 all_x = dataset.data
                 all_pl = dataset.pl
                 all_labels = dataset.labels
-                
-            # if fs:
-            #     #select columns of 0 (MAP), 7 (PULSAT), 9 (HR) in all_x and all_labels
-            #     all_x = all_x[:,:,[0, 7, 9]]
-            #     all_labels = all_labels[:,:, [0, 7, 9]]
-            #     print("FEATURE SELECTION APPLIED FOR 0, 7, 9")
+
             reward_l = []
             done_l = []
             observation = all_x.reshape(-1,self.timesteps*(self.feature_dim))
@@ -67,22 +64,38 @@ class ReplayBuffer:
             action = all_pl
             #take one number with majority voting among 6 numbers
             action_unnorm = np.array(env.world_model.unnorm_pl(action))
-            action = np.array([np.bincount(a.astype(int)).argmax() for a in action_unnorm]).reshape(-1,1)
+            action_1 = np.array([np.bincount(a.astype(int)).argmax() for a in action_unnorm]).reshape(-1,1)
             #normalize back
-            action = env.world_model.normalize_pl(torch.Tensor(action))
+            action = env.world_model.normalize_pl(torch.Tensor(action_1))
+            obs_reshaped = (observation.reshape(-1, self.timesteps, self.feature_dim)).clone() #shape (1,6,12)
             for i in tqdm.tqdm(range(action.shape[0])):
-            
-                reward = env._compute_reward(next_observation[i].reshape(-1,self.timesteps, self.feature_dim))
+
+                if (env.gamma1 != 0.0) or (env.gamma2 != 0.0) or (env.gamma3 != 0.0):
+                    
+                    #change the last column of obs_reshaped with all_pl[i-1] after i==0
+                    if i>0:
+                        obs_reshaped[i,:,-1] = all_pl[i-1] 
+                    reward = env._compute_reward(next_observation[i].reshape(-1,self.timesteps, self.feature_dim), obs_reshaped[i], action_1[i])
+                    # action2 = [action2[1], action_1[i+1]] if (i+1)< action.shape[0] else None
+                    
+                else:	
+                    reward = env._compute_reward(next_observation[i].reshape(-1,self.timesteps, self.feature_dim))
+
                 reward_l.append(reward)
                 done_l.append(np.array([0]))
-            self.observations = np.array(observation)
-            self.actions =  np.array(action)
-            self.next_observations =  np.array(next_observation)
-            self.rewards =  np.array(reward_l).reshape(-1,1)
-            self.terminals = 1. -  np.array(done_l).reshape(-1,1) 
-            self.ptr = len(observation)
-            self.size = len(observation)
-            self.max_size = self.observations.shape[0]
+            
+            self.state = np.array(observation)
+            self.action =  np.array(action)
+            self.next_state =  np.array(next_observation)
+            self.reward =  np.array(reward_l).reshape(-1,1)
+            self.not_done = 1. -  np.array(done_l).reshape(-1,1)
+            self.size = self.state.shape[0]
+
+            print(self.state.min(), self.state.max())
+            print(self.action.min(), self.action.max())
+            print(self.next_state.min(), self.next_state.max())
+            print(self.reward.min(), self.reward.max())
+            print(self.not_done.min(), self.not_done.max())
             
         else:
             observations = np.array(dataset["observations"], dtype=self.obs_dtype)

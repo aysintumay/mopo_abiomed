@@ -173,7 +173,7 @@ def plot_histogram(data, y_label,):
     plt.show()
 
 
-def plot_policy(eval_env, state, all_states):
+def plot_policy(eval_env, state, all_states, title, legend=None):
     """
 
     Plot the policy for the given state and environment.
@@ -185,9 +185,9 @@ def plot_policy(eval_env, state, all_states):
     """
 
     input_color = 'tab:blue'
-    pred_color = 'tab:pink' #label="input",
+    pred_color = 'tab:red' #label="input",
     gt_color = 'tab:red'
-    rl_color = 'darkblue'
+    rl_color = 'tab:blue'
 
 
     max_steps = eval_env.max_steps
@@ -199,7 +199,7 @@ def plot_policy(eval_env, state, all_states):
     all_state_unnorm = eval_env.world_model.unnorm_output(np.array(all_states).reshape(max_steps+1, forecast_n, -1))
     first_action_unnorm = state_unnorm[0,:,-1] #normalized
 
-    fig, ax1 = plt.subplots(figsize = (8,5.8), dpi=300)
+    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300,  layout='constrained')  # Smaller plot size
                                     
     default_x_ticks = range(0, 181, 18)
     x_ticks = np.array(list(range(0, 31, 3)))
@@ -209,23 +209,36 @@ def plot_policy(eval_env, state, all_states):
     ax1.axvline(x=x1, linestyle='--', c='black', alpha =0.7)
 
 
-    line_obs, = ax1.plot(range(0, x1+x2), all_state_unnorm[:, :, 0].reshape(-1,1), label ='Observed MAP', color=gt_color)
-    line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), '--', label ='Predicted MAP', color=pred_color)
+    
+    line_obs, = ax1.plot(range(0, x1+x2), all_state_unnorm[:, :, 0].reshape(-1,1),  '--', label ='Observed MAP', alpha=0.5,  color=gt_color, linewidth=2.0)
+    line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), label ='Predicted MAP',color=pred_color,  linewidth=2.0)
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-    line_pl1, = ax2.plot(range(0, x1+x2),  all_state_unnorm[:,:,-1].reshape(-1),  label ='Input PL', color=input_color)
-    line_pl2, = ax2.plot(range(x1, x1+x2), action_unnorm.reshape(-1,1),'--',label ='Recommended PL', color=rl_color)
+    line_pl1, = ax2.plot(range(0, x1+x2),  all_state_unnorm[:,:,-1].reshape(-1), '--', label ='Input PL', alpha= 0.5, color=input_color, linewidth=2.0)
+    line_pl2, = ax2.plot(range(x1, x1+x2), action_unnorm.reshape(-1,1),label ='Recommended PL', color=rl_color, linewidth=2.0)
 
     # Combined legend for all lines
     lines = [line_obs, line_pred1, line_pl1, line_pl2]
     labels = ['Observed MAP', 'Predicted MAP', 'Input PL', 'Recommended PL']
-    ax1.legend(lines, labels, loc='upper right', bbox_to_anchor=(1.0, 1.0), ncol=2, fontsize='small')
-
-    ax1.set_ylabel('MAP (mmHg)',  )
-    ax2.set_ylabel('P-level',  )
-    ax1.set_xlabel('Time (hour)',)
-    ax1.set_title(f"MAP Prediction and P-level")
+    if legend:
+        ax1.legend(lines, labels, loc='lower center', bbox_to_anchor=(0.5, -0.3), fancybox=True, ncol=1, fontsize='medium')  # Legend at the bottom
+    ax1.set_ylabel('MAP (mmHg)', size="large", color='tab:red')
+    ax1.tick_params(axis='y', colors='tab:red')
+    ax1.set_xlabel('Time (hour)', size="x-large")
+    ax1.set_title(f"{title}", size="x-large", fontweight="bold")
+    # ax2.set_ylabel('P-level', size="x-large", color='tab:blue', labelpad=10)
+    ax2.tick_params(axis='y', colors='tab:blue')
     ax2.set_ylim(2, 10)
+    # ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['bottom'].set_visible(False)
+    # ax1.spines['left'].set_visible(False)
+    # fig.subplots_adjust(left=0.14, right=0.88, top=0.90, bottom=0.24)
     wandb.log({f"eval_sample": wandb.Image(fig)})
+
+    # ax1.set_ylabel('MAP (mmHg)', size="x-large", color='tab:red')
+	
+	
+	
 
     plt.close(fig)
 

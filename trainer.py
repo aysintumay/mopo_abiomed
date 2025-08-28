@@ -139,7 +139,7 @@ class Trainer:
                     num_timesteps += 1
                     t.update(1)
             # evaluate current policy
-            if e % 1 == 0:
+            if e % 50 == 0:
                 # if self.env_name == 'Abiomed-v0':
                 #     eval_info, _ = self.evaluate()
                 # else:

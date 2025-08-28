@@ -36,7 +36,7 @@ class MOPO:
         self.model_buffer = model_buffer
         self._reward_penalty_coef = reward_penalty_coef
         self._rollout_length = rollout_length
-        self._rollout_batch_size = rollout_batch_size
+        self._rollout_batch_size = kwargs.get('rollout_batch_size', rollout_batch_size)
         self._batch_size = batch_size
         self._real_ratio = real_ratio
         self.model_batch_size = model_batch_size

@@ -37,7 +37,7 @@ from noisy_mujoco.wrappers import (
                         
 from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
 from noisy_mujoco.abiomed_env.cost_func import (compute_acp_cost, 
-                                                overall_acp_cost, 
+                                                compute_acp_cost_model,
                                                 compute_map_model_air, 
                                                 compute_hr_model_air,
                                                 compute_pulsatility_model_air,
@@ -129,7 +129,13 @@ def get_bcq(env, args):
     policy.load(args.policy_path, state_dim, action_dim, device)
     return policy
 
-def _evaluate(policy, eval_env, episodes, plot=None):
+def custom_evaluation_metric(reward, ws, acp, air):
+    """
+    Calculate the custom evaluation metric: 0.3*reward + 0.3*WS + 0.2*ACP + 0.2*AIR
+    """
+    return 0.3 * reward + 0.3 * ws - 0.2 * acp + 0.2 * air
+
+def _evaluate(policy, eval_env, episodes, args, plot=None):
         
 
     eval_ep_info_buffer = []
@@ -154,7 +160,10 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     wean_score = 0.0
 
     policy.eval()
-    obs, info = eval_env.reset()
+    # if num_episodes==4:
+    #     obs, info = eval_env.reset(idx=num_episodes)
+    # else:
+    obs, info = eval_env.reset(idx=100)
     all_states = info['all_states']  #normalized
     all_states = np.concatenate([obs.reshape(1,-1), all_states], axis=0)
     
@@ -183,34 +192,33 @@ def _evaluate(policy, eval_env, episodes, plot=None):
             states.append(ep_states)
             
             
-            #again this is just for visualization
-            episode_acp_cost = compute_acp_cost(eval_env.episode_actions)
-            total_acp += episode_acp_cost
             # episode_log_data = {
             #     "eval/episode_acp": episode_acp_cost
             # }
             # wandb.log(episode_log_data)
             ep_states_np = np.array(ep_states)
             # print(ep_states_np.shape)
-            episode_map_cost = compute_map_model_air(env.world_model, ep_states_np, eval_env.episode_actions)
+            episode_acp_cost = compute_acp_cost_model(eval_env.world_model, eval_env.episode_actions, ep_states_np)
+            total_acp += episode_acp_cost
+            episode_map_cost = compute_map_model_air(eval_env.world_model, ep_states_np, eval_env.episode_actions)
             total_map_air_sum += episode_map_cost
             nondiscrete_actions = []
             
             
-            episode_hr_cost = compute_hr_model_air(env.world_model, ep_states_np, eval_env.episode_actions)
+            episode_hr_cost = compute_hr_model_air(eval_env.world_model, ep_states_np, eval_env.episode_actions)
             total_hr_air_sum += episode_hr_cost
 
-            episode_pulsatility_cost = compute_pulsatility_model_air(env.world_model, ep_states_np, eval_env.episode_actions)
+            episode_pulsatility_cost = compute_pulsatility_model_air(eval_env.world_model, ep_states_np, eval_env.episode_actions)
             total_pulsatility_air_sum += episode_pulsatility_cost
 
-            episode_aggregate_cost = aggregate_air_model(env.world_model, ep_states_np,eval_env.episode_actions)
+            episode_aggregate_cost = aggregate_air_model(eval_env.world_model, ep_states_np,eval_env.episode_actions)
             total_aggregate_air_sum += episode_aggregate_cost
         
-            wean_score += weaning_score_model(env.world_model, ep_states_np, eval_env.episode_actions)
+            wean_score += weaning_score_model(eval_env.world_model, ep_states_np, eval_env.episode_actions)
 
-            unstable_ep = unstable_percentage_model(env.world_model, ep_states_np)
+            unstable_ep = unstable_percentage_model(eval_env.world_model, ep_states_np)
             total_unstable_percentage_sum += unstable_ep
-            total_super    += super_metric(env.world_model, ep_states_np, eval_env.episode_actions)
+            total_super    += super_metric(eval_env.world_model, ep_states_np, eval_env.episode_actions)
 
             episode_log_data = {
                 "eval/episode_map_air": episode_map_cost,
@@ -222,16 +230,15 @@ def _evaluate(policy, eval_env, episodes, plot=None):
             eval_ep_info_buffer.append(
                 {"episode_reward": episode_reward, "episode_length": episode_length}
             ) 
-            
-            num_episodes +=1
 
             next_state_l = ep_states.copy()
             next_state_l.append(obs)
-            if (num_episodes == 1) and plot:
-                plot_policy(eval_env, next_state_l[1:], all_states)
+            if (num_episodes ==0) and plot:
+                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper())
 
             episode_reward, episode_length = 0, 0
-
+            num_episodes +=1
+            
             obs, _ = eval_env.reset()
             ep_states = []
        
@@ -244,11 +251,6 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     ep_reward_mean, ep_reward_std = np.mean(eval_info["eval/episode_reward"]), np.std(eval_info["eval/episode_reward"])
     ep_length_mean, ep_length_std = np.mean(eval_info["eval/episode_length"]), np.std(eval_info["eval/episode_length"])
     print(f"Mean Return: {ep_reward_mean:.2f} ± {ep_reward_std:.2f}")
-
-    #added
-    timestep_acp_mean = overall_acp_cost(actions)
-    
-    print(f"Mean ACP across all timesteps in all episodes: {timestep_acp_mean:.5f}")
     total_acp /= num_episodes
     # print(f"Mean ACP over episodes: {total_acp:.5f}")
 
@@ -271,6 +273,7 @@ def _evaluate(policy, eval_env, episodes, plot=None):
     # print(f"Aggregate AIR over episodes: {final_aggregate_air}")
     super_mean = total_super/num_episodes
 
+    custom_metric = custom_evaluation_metric(ep_reward_mean, final_avg_wean_score, total_acp, final_aggregate_air)
 
     
     print("---------------------------------------")
@@ -297,7 +300,8 @@ def _evaluate(policy, eval_env, episodes, plot=None):
             'mean_aggregate_air': final_aggregate_air,
             'mean_unsafe_hours': unsafe_hours,
             'mean_wean_score': final_avg_wean_score,
-            'super_metric': super_mean
+            'super_metric': super_mean,
+            'custom_metric': custom_metric
         }
 
 
@@ -500,7 +504,7 @@ if __name__ == "__main__":
     env = get_env() 
     if args_partial.algo_name != "bcq":
         policy = get_mopo(args)
-        eval_info = _evaluate(policy, env, args.eval_episodes, plot=True) # TODO:ADD D4RL EVALAUTION
+        eval_info = _evaluate(policy, env, args.eval_episodes, args,plot=True) # TODO:ADD D4RL EVALAUTION
     elif args_partial.algo_name == "bcq":
         policy = get_bcq(env, args)
         eval_info = eval_policy(policy, env, args.task, args.eval_episodes, plot=True)
