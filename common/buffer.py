@@ -84,18 +84,17 @@ class ReplayBuffer:
                 reward_l.append(reward)
                 done_l.append(np.array([0]))
             
-            self.state = np.array(observation)
-            self.action =  np.array(action)
-            self.next_state =  np.array(next_observation)
-            self.reward =  np.array(reward_l).reshape(-1,1)
-            self.not_done = 1. -  np.array(done_l).reshape(-1,1)
-            self.size = self.state.shape[0]
+            self.observations = np.array(observation)
+            self.actions =  np.array(action)
+            self.next_observations =  np.array(next_observation)
+            self.rewards =  np.array(reward_l).reshape(-1,1)
+            self.terminals = 1. -  np.array(done_l).reshape(-1,1)
+            self.size = self.observations.shape[0]
 
-            print(self.state.min(), self.state.max())
-            print(self.action.min(), self.action.max())
-            print(self.next_state.min(), self.next_state.max())
-            print(self.reward.min(), self.reward.max())
-            print(self.not_done.min(), self.not_done.max())
+            if np.all((self.observations==0)):
+                raise ValueError("All observations are zero!")
+
+           
             
         else:
             observations = np.array(dataset["observations"], dtype=self.obs_dtype)

@@ -157,7 +157,6 @@ def run_hyperparameter_search(args, gamma_ranges):
             Devid = args.devid if args.device == 'cuda' else -1
             set_device_and_logger(Devid, logger, model_logger)
 
-            args.model_path = model_path
        
 
      
@@ -194,6 +193,7 @@ def run_hyperparameter_search(args, gamma_ranges):
                     print("Environment without noise")
                     env = env
             print(f"Starting trial {trial_id} with gamma1={gamma1}, gamma2={gamma2}, gamma3={gamma3}")
+
             policy, trainer = train(env, run, logger, seed, trial_args)
             env = AbiomedRLEnvFactory.create_env(
                                             model_name=args.model_name,
@@ -232,11 +232,11 @@ def run_hyperparameter_search(args, gamma_ranges):
                 'avg_air': metrics['mean_aggregate_air'],
                 'model_path': model_path
             }
-            
+            reward = metrics['mean_return']
             results.append(result)
             
-            if custom_metric > best_score:
-                best_score = custom_metric
+            if reward > best_score:
+                best_score = reward
                 best_params = (gamma1, gamma2, gamma3)
                 best_model_path = model_path
             
@@ -285,9 +285,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--gamma1", type=float, nargs='+', default=[0.3, 0.5])
-    parser.add_argument("--gamma2", type=float, nargs='+', default=[0.5,0.8])
-    parser.add_argument("--gamma3", type=float, nargs='+', default=[1, 1.2])
-   
+    parser.add_argument("--gamma2", type=float, nargs='+', default=[0.5, 0.8])
+    parser.add_argument("--gamma3", type=float, nargs='+', default=[0.5, 1])
+    # parser.add_argument("--gamma1", type=float, nargs='+', default=[0.0])
+    # parser.add_argument("--gamma2", type=float, nargs='+', default=[0.0])
+    # parser.add_argument("--gamma3", type=float, nargs='+', default=[0.0])
+
     args = get_args()
     args_gamma = parser.parse_args()
     device = torch.device(f"cuda:{args.devid}" if torch.cuda.is_available() else "cpu")

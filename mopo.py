@@ -46,7 +46,7 @@ def get_args():
     parser.add_argument(
                     "--devid", 
                     type=int,
-                    default=7,
+                    default=1,
                     help="Which GPU device index to use"
                 )
 
@@ -65,7 +65,7 @@ def get_args():
     parser.add_argument("--dynamics-lr", type=float, default=0.001)
     parser.add_argument("--n-ensembles", type=int, default=7)
     parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=0.5) #1e=6
+    parser.add_argument("--reward-penalty-coef", type=float, default=0.0) #1e=6
     parser.add_argument("--rollout-length", type=int, default=5) #1 
     parser.add_argument("--rollout-batch-size", type=int, default=10000) #50000
     parser.add_argument("--rollout-freq", type=int, default=1000)
@@ -134,7 +134,7 @@ def get_args():
 
 
 def main(args):
-    print("ROLLOUT BATCH SIZE", args.rollout_batch_size)
+    # print("ROLLOUT BATCH SIZE", args.rollout_batch_size)
     run = wandb.init(
                 project=args.task,
                 group=args.algo_name,
