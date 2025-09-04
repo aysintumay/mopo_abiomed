@@ -173,6 +173,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
     ws_num = 0.0
     acp_list = []
     ws_list = []
+    rwd_list = []
     plotted_max_acp = 0
     plotted_min_acp = 0
     plotted_max_ws = 0
@@ -188,6 +189,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
         
         
         episode_reward += reward
+        rwd_list.append(reward)
 
         #added
         episode_length += 1
@@ -250,16 +252,16 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
                 plotted_min_acp=1
                 plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min ACP")
 
-            if (episode_acp_cost == 5.0) and (plotted_max_acp==0):
+            if (episode_acp_cost == 3.0) and (plotted_max_acp==0):
                 plotted_max_acp=1
                 plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max ACP", legend=True)
 
             if ws < 0.0:
                 ws_num += 1.0
-            if ws <= -0.3333 and plotted_min_ws==0:
+            if ws == -0.2 and plotted_min_ws==0:
                 plotted_min_ws=1
                 plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min WS")
-            if ws == 0.6 and plotted_max_ws==0:
+            if ws == 1.0 and plotted_max_ws==0:
                 plotted_max_ws=1
                 plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max WS")
 
@@ -270,8 +272,22 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             ep_states = []
             all_states = info['all_states']  #normalized
             all_states = np.concatenate([obs.reshape(1,-1), all_states], axis=0)
-       
-       
+    
+    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300)
+    plt.hist(acp_list)
+    plt.title("ACP")
+    plt.show()
+    wandb.log({f"eval_sample_acp": wandb.Image(fig)})
+    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300)
+    plt.hist(ws_list)
+    plt.title("WS")
+    plt.show()
+    wandb.log({f"eval_sample_ws": wandb.Image(fig)})
+    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300)
+    plt.hist(rwd_list)
+    plt.title("Reward")
+    plt.show()
+    wandb.log({f"eval_sample_rwd": wandb.Image(fig)}) 
     eval_info = {
                         "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
                         "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
@@ -438,7 +454,7 @@ if __name__ == "__main__":
     parser.add_argument(
                     "--devid", 
                     type=int,
-                    default=5,
+                    default=7,
                     help="Which GPU device index to use"
                 )
 

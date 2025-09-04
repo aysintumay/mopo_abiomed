@@ -51,7 +51,7 @@ class ReplayBuffer(object):
 			action = all_pl
 			#take one number with majority voting among 6 numbers
 			action_unnorm = np.array(env.world_model.unnorm_pl(action))
-			action_1 = np.array([np.bincount(a.astype(int)).argmax() for a in action_unnorm]).reshape(-1,1)
+			action_1 = np.array([np.bincount(np.rint(a).astype(int)).argmax() for a in action_unnorm]).reshape(-1,1)
 			#normalize back
 			action = env.world_model.normalize_pl(torch.Tensor(action_1))
 			obs_reshaped = (observation.reshape(-1, self.timesteps, self.feature_dim)).clone() #shape (1,6,12)
