@@ -170,6 +170,7 @@ class BCQ(object):
 
 			self.critic_optimizer.zero_grad()
 			critic_loss.backward()
+			torch.nn.utils.clip_grad_norm_(self.critic.parameters(), max_norm=10.0)
 			self.critic_optimizer.step()
 
 
@@ -182,6 +183,7 @@ class BCQ(object):
 		 	 
 			self.actor_optimizer.zero_grad()
 			actor_loss.backward()
+			torch.nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm=10.0)
 			self.actor_optimizer.step()
 
 

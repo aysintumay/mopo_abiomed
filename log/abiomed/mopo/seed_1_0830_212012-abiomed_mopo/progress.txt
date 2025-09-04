@@ -1,0 +1,66 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.180352
+loss/model_eval_mse_loss: 0.170335
+loss/model_eval_mse_loss: 0.154713
+loss/model_eval_mse_loss: 0.143937
+loss/model_eval_mse_loss: 0.137436
+loss/model_eval_mse_loss: 0.135873
+loss/model_eval_mse_loss: 0.133978
+loss/model_eval_mse_loss: 0.129420
+loss/model_eval_mse_loss: 0.129750
+loss/model_eval_mse_loss: 0.127397
+loss/model_eval_mse_loss: 0.126573
+loss/model_eval_mse_loss: 0.123625
+loss/model_eval_mse_loss: 0.123604
+loss/model_eval_mse_loss: 0.122442
+loss/model_eval_mse_loss: 0.121444
+loss/model_eval_mse_loss: 0.118731
+loss/model_eval_mse_loss: 0.117904
+loss/model_eval_mse_loss: 0.117884
+loss/model_eval_mse_loss: 0.115311
+loss/model_eval_mse_loss: 0.114231
+loss/model_eval_mse_loss: 0.113228
+loss/model_eval_mse_loss: 0.111497
+loss/model_eval_mse_loss: 0.111790
+loss/model_eval_mse_loss: 0.110257
+loss/model_eval_mse_loss: 0.109767
+loss/model_eval_mse_loss: 0.109058
+loss/model_eval_mse_loss: 0.107652
+loss/model_eval_mse_loss: 0.108657
+loss/model_eval_mse_loss: 0.108554
+loss/model_eval_mse_loss: 0.107505
+loss/model_eval_mse_loss: 0.108155
+loss/model_eval_mse_loss: 0.106453
+loss/model_eval_mse_loss: 0.107462
+loss/model_eval_mse_loss: 0.106751
+loss/model_eval_mse_loss: 0.105615
+loss/model_eval_mse_loss: 0.104400
+loss/model_eval_mse_loss: 0.103991
+loss/model_eval_mse_loss: 0.105383
+loss/model_eval_mse_loss: 0.104446
+loss/model_eval_mse_loss: 0.103278
+loss/model_eval_mse_loss: 0.103958
+loss/model_eval_mse_loss: 0.101946
+loss/model_eval_mse_loss: 0.102610
+loss/model_eval_mse_loss: 0.102540
+loss/model_eval_mse_loss: 0.102218
+loss/model_eval_mse_loss: 0.101154
+loss/model_eval_mse_loss: 0.101048
+loss/model_eval_mse_loss: 0.102112
+loss/model_eval_mse_loss: 0.100303
+loss/model_eval_mse_loss: 0.101220
+loss/model_eval_mse_loss: 0.100689
+loss/model_eval_mse_loss: 0.103096
+loss/model_eval_mse_loss: 0.101275
+loss/model_eval_mse_loss: 0.102360
+loss/model_eval_mse_loss: 0.100513
+loss/model_eval_mse_loss: 0.099523
+loss/model_eval_mse_loss: 0.100529
+loss/model_eval_mse_loss: 0.101468
+loss/model_eval_mse_loss: 0.102702
+loss/model_eval_mse_loss: 0.102943
+loss/model_eval_mse_loss: 0.103023
+total time: 58.894s
+Epoch #50: episode_reward: 0.670 ± 4.549,                                episode_length: 6.000 ± 0.000
+Epoch #100: episode_reward: 0.047 ± 5.053,                                episode_length: 6.000 ± 0.000
+total time: 1636.931s

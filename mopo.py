@@ -65,7 +65,7 @@ def get_args():
     parser.add_argument("--dynamics-lr", type=float, default=0.001)
     parser.add_argument("--n-ensembles", type=int, default=7)
     parser.add_argument("--n-elites", type=int, default=5)
-    parser.add_argument("--reward-penalty-coef", type=float, default=0.0) #1e=6
+    parser.add_argument("--reward-penalty-coef", type=float, default=0.5) #1e=6
     parser.add_argument("--rollout-length", type=int, default=5) #1 
     parser.add_argument("--rollout-batch-size", type=int, default=10000) #50000
     parser.add_argument("--rollout-freq", type=int, default=1000)
@@ -118,6 +118,9 @@ def get_args():
     parser.add_argument("--model_path_wm", type=str, default=None)
     parser.add_argument("--data_path_wm", type=str, default=None)
     parser.add_argument("--max_steps", type=int, default=6)
+    parser.add_argument("--gamma1", type=float , default=0.0)
+    parser.add_argument("--gamma2", type=float, default=0.0)
+    parser.add_argument("--gamma3", type=float, default=0.0)
     parser.add_argument("--fs", action="store_true", help = "doing feature selection")
 
 
@@ -175,6 +178,9 @@ def main(args):
                                         model_path=args.model_path_wm,
                                         data_path=args.data_path_wm,
                                         max_steps=args.max_steps,
+                                        gamma1=args.gamma1,
+                                        gamma2=args.gamma2,
+                                        gamma3=args.gamma3,
                                         action_space_type="continuous",
                                         reward_type="smooth",
                                         normalize_rewards=True,

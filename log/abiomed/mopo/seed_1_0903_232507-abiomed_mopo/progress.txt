@@ -1,0 +1,109 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.174682
+loss/model_eval_mse_loss: 0.167409
+loss/model_eval_mse_loss: 0.150724
+loss/model_eval_mse_loss: 0.141727
+loss/model_eval_mse_loss: 0.134876
+loss/model_eval_mse_loss: 0.132614
+loss/model_eval_mse_loss: 0.131096
+loss/model_eval_mse_loss: 0.126771
+loss/model_eval_mse_loss: 0.127948
+loss/model_eval_mse_loss: 0.125288
+loss/model_eval_mse_loss: 0.124799
+loss/model_eval_mse_loss: 0.121372
+loss/model_eval_mse_loss: 0.121686
+loss/model_eval_mse_loss: 0.120127
+loss/model_eval_mse_loss: 0.118975
+loss/model_eval_mse_loss: 0.116566
+loss/model_eval_mse_loss: 0.115350
+loss/model_eval_mse_loss: 0.114422
+loss/model_eval_mse_loss: 0.113274
+loss/model_eval_mse_loss: 0.112099
+loss/model_eval_mse_loss: 0.111565
+loss/model_eval_mse_loss: 0.109647
+loss/model_eval_mse_loss: 0.109986
+loss/model_eval_mse_loss: 0.108452
+loss/model_eval_mse_loss: 0.108233
+loss/model_eval_mse_loss: 0.108207
+loss/model_eval_mse_loss: 0.106178
+loss/model_eval_mse_loss: 0.106734
+loss/model_eval_mse_loss: 0.106254
+loss/model_eval_mse_loss: 0.105853
+loss/model_eval_mse_loss: 0.106520
+loss/model_eval_mse_loss: 0.104647
+loss/model_eval_mse_loss: 0.105456
+loss/model_eval_mse_loss: 0.104327
+loss/model_eval_mse_loss: 0.104212
+loss/model_eval_mse_loss: 0.103389
+loss/model_eval_mse_loss: 0.102843
+loss/model_eval_mse_loss: 0.103932
+loss/model_eval_mse_loss: 0.102444
+loss/model_eval_mse_loss: 0.102154
+loss/model_eval_mse_loss: 0.102280
+loss/model_eval_mse_loss: 0.100593
+loss/model_eval_mse_loss: 0.101276
+loss/model_eval_mse_loss: 0.101279
+loss/model_eval_mse_loss: 0.100673
+loss/model_eval_mse_loss: 0.099284
+loss/model_eval_mse_loss: 0.100139
+loss/model_eval_mse_loss: 0.101767
+loss/model_eval_mse_loss: 0.099264
+loss/model_eval_mse_loss: 0.099618
+loss/model_eval_mse_loss: 0.099502
+loss/model_eval_mse_loss: 0.100058
+loss/model_eval_mse_loss: 0.099473
+loss/model_eval_mse_loss: 0.101081
+loss/model_eval_mse_loss: 0.098670
+loss/model_eval_mse_loss: 0.097936
+loss/model_eval_mse_loss: 0.099572
+loss/model_eval_mse_loss: 0.111889
+loss/model_eval_mse_loss: 0.104314
+loss/model_eval_mse_loss: 0.103481
+loss/model_eval_mse_loss: 0.100741
+loss/model_eval_mse_loss: 0.098488
+loss/model_eval_mse_loss: 0.098612
+loss/model_eval_mse_loss: 0.097936
+loss/model_eval_mse_loss: 0.097498
+loss/model_eval_mse_loss: 0.097280
+loss/model_eval_mse_loss: 0.096959
+loss/model_eval_mse_loss: 0.097049
+loss/model_eval_mse_loss: 0.097705
+loss/model_eval_mse_loss: 0.097140
+loss/model_eval_mse_loss: 0.096678
+loss/model_eval_mse_loss: 0.096617
+loss/model_eval_mse_loss: 0.096553
+loss/model_eval_mse_loss: 0.095698
+loss/model_eval_mse_loss: 0.095970
+loss/model_eval_mse_loss: 0.100428
+loss/model_eval_mse_loss: 0.098027
+loss/model_eval_mse_loss: 0.099233
+loss/model_eval_mse_loss: 0.097339
+loss/model_eval_mse_loss: 0.096296
+loss/model_eval_mse_loss: 0.096735
+loss/model_eval_mse_loss: 0.095395
+loss/model_eval_mse_loss: 0.095128
+loss/model_eval_mse_loss: 0.095016
+loss/model_eval_mse_loss: 0.098572
+loss/model_eval_mse_loss: 0.096510
+loss/model_eval_mse_loss: 0.095292
+loss/model_eval_mse_loss: 0.094971
+loss/model_eval_mse_loss: 0.094823
+loss/model_eval_mse_loss: 0.094895
+loss/model_eval_mse_loss: 0.094830
+loss/model_eval_mse_loss: 0.094751
+loss/model_eval_mse_loss: 0.094323
+loss/model_eval_mse_loss: 0.094980
+loss/model_eval_mse_loss: 0.094931
+loss/model_eval_mse_loss: 0.095610
+total time: 94.047s
+Epoch #10: episode_reward: 0.421 ± 4.611,                                episode_length: 6.000 ± 0.000
+Epoch #20: episode_reward: -0.017 ± 5.126,                                episode_length: 6.000 ± 0.000
+Epoch #30: episode_reward: 0.991 ± 4.189,                                episode_length: 6.000 ± 0.000
+Epoch #40: episode_reward: 0.409 ± 4.278,                                episode_length: 6.000 ± 0.000
+Epoch #50: episode_reward: 0.399 ± 4.530,                                episode_length: 6.000 ± 0.000
+Epoch #60: episode_reward: 0.219 ± 4.741,                                episode_length: 6.000 ± 0.000
+Epoch #70: episode_reward: 0.081 ± 5.011,                                episode_length: 6.000 ± 0.000
+Epoch #80: episode_reward: 0.718 ± 4.529,                                episode_length: 6.000 ± 0.000
+Epoch #90: episode_reward: -0.111 ± 5.169,                                episode_length: 6.000 ± 0.000
+Epoch #100: episode_reward: -0.118 ± 5.582,                                episode_length: 6.000 ± 0.000
+total time: 1255.043s

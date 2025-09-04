@@ -169,8 +169,17 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
     
     ep_states = []
 
-    while num_episodes < episodes:
+    acp_num = 0.0
+    ws_num = 0.0
+    acp_list = []
+    ws_list = []
+    plotted_max_acp = 0
+    plotted_min_acp = 0
+    plotted_max_ws = 0
+    plotted_min_ws = 0
 
+    while num_episodes < episodes:
+        
         action = policy.sample_action(obs, deterministic=True)
 
         # wandb.log(log_data)
@@ -190,16 +199,12 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             #added
             actions.append(eval_env.episode_actions)
             states.append(ep_states)
-            
-            
-            # episode_log_data = {
-            #     "eval/episode_acp": episode_acp_cost
-            # }
-            # wandb.log(episode_log_data)
+        
             ep_states_np = np.array(ep_states)
             # print(ep_states_np.shape)
             episode_acp_cost = compute_acp_cost_model(eval_env.world_model, eval_env.episode_actions, ep_states_np)
             total_acp += episode_acp_cost
+            acp_list.append(episode_acp_cost)
             episode_map_cost = compute_map_model_air(eval_env.world_model, ep_states_np, eval_env.episode_actions)
             total_map_air_sum += episode_map_cost
             nondiscrete_actions = []
@@ -213,13 +218,15 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
 
             episode_aggregate_cost = aggregate_air_model(eval_env.world_model, ep_states_np,eval_env.episode_actions)
             total_aggregate_air_sum += episode_aggregate_cost
-        
-            wean_score += weaning_score_model(eval_env.world_model, ep_states_np, eval_env.episode_actions)
+            ws = weaning_score_model(eval_env.world_model, ep_states_np, eval_env.episode_actions)
+            wean_score += ws
+            ws_list.append(ws)
 
             unstable_ep = unstable_percentage_model(eval_env.world_model, ep_states_np)
             total_unstable_percentage_sum += unstable_ep
             total_super    += super_metric(eval_env.world_model, ep_states_np, eval_env.episode_actions)
 
+            
             episode_log_data = {
                 "eval/episode_map_air": episode_map_cost,
                 "eval/episode_hr_air": episode_hr_cost,
@@ -236,11 +243,33 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             if (num_episodes ==0) and plot:
                 plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper())
 
+            if (episode_acp_cost >= 3.0):
+                acp_num += 1.0
+                
+            if (episode_acp_cost == 0.0) and (plotted_min_acp==0):
+                plotted_min_acp=1
+                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min ACP")
+
+            if (episode_acp_cost == 5.0) and (plotted_max_acp==0):
+                plotted_max_acp=1
+                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max ACP", legend=True)
+
+            if ws < 0.0:
+                ws_num += 1.0
+            if ws <= -0.3333 and plotted_min_ws==0:
+                plotted_min_ws=1
+                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min WS")
+            if ws == 0.6 and plotted_max_ws==0:
+                plotted_max_ws=1
+                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max WS")
+
             episode_reward, episode_length = 0, 0
             num_episodes +=1
             
-            obs, _ = eval_env.reset()
+            obs, info = eval_env.reset()
             ep_states = []
+            all_states = info['all_states']  #normalized
+            all_states = np.concatenate([obs.reshape(1,-1), all_states], axis=0)
        
        
     eval_info = {
@@ -286,6 +315,8 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
     print(f"  Unstable hours (%): {unsafe_hours:.3f}")
     print(f"  Weaning score: {final_avg_wean_score:.5f}")
     print(f"Super metric: {super_mean:.5f}")
+    print('percentage of episodes with ACP >= 3.0:', (acp_num/episodes)*100.0, "maximum acp in eval episodes:", max(acp_list), "minimum acp in eval episodes:", min(acp_list))
+    print('percentage of episodes with Weaning score <= 0.0:', (ws_num/episodes)*100.0, "maximum weaning score in eval episodes:", max(ws_list), "minimum weaning score in eval episodes:", min(ws_list))
     print("---------------------------------------")
 
     return {    
@@ -400,9 +431,9 @@ if __name__ == "__main__":
         description="Test your RL method"
     )
 
-    parser.add_argument("--task", type=str, default="Abiomed-v0")
+    parser.add_argument("--task", type=str, default="abiomed")
     parser.add_argument("--policy_path" , type=str,
-                         default="/abiomed/models/policy_models/mopo/seed_1_0803_122349-abiomed_mopo_penalty_1/policy_abiomed.pth")
+                         default="/abiomed/models/policy_models/mopo/abiomed/seed_1_0902_191735-abiomed_mopo/policy_abiomed.pth")
     parser.add_argument("--model_path" , type=str, default="saved_models")
     parser.add_argument(
                     "--devid", 
