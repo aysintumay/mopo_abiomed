@@ -267,7 +267,7 @@ def plot_score_histograms(acp_list, ws_list, rwd_list, title):
     configs = [
         ("ACP values",    acp_list, (0, 5)),
         ("WS values",     ws_list,  (-1, 2)),
-        ("Reward values", rwd_list, (-5, 4)),
+        ("Reward values", rwd_list, (-2, 1)),
     ]
 
     for ax, (xlabel, vals, xlim) in zip(axes, configs):

@@ -38,6 +38,8 @@ from noisy_mujoco.wrappers import (
 from noisy_mujoco.abiomed_env.rl_env import AbiomedRLEnvFactory
 from noisy_mujoco.abiomed_env.cost_func import (compute_acp_cost, 
                                                 compute_acp_cost_model,
+                                                weaning_score_model_gradient,
+                                                compute_air_aggregate_gradient_threshold,
                                                 compute_map_model_air, 
                                                 compute_hr_model_air,
                                                 compute_pulsatility_model_air,
@@ -163,6 +165,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
     total_unstable_percentage_sum = 0.0
     total_super = 0.0
     wean_score = 0.0
+    
 
     policy.eval()
     # if num_episodes==4:
@@ -223,15 +226,17 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             episode_pulsatility_cost = compute_pulsatility_model_air(eval_env.world_model, ep_states_np, eval_env.episode_actions)
             total_pulsatility_air_sum += episode_pulsatility_cost
 
-            episode_aggregate_cost = aggregate_air_model(eval_env.world_model, ep_states_np,eval_env.episode_actions)
+            episode_aggregate_cost = compute_air_aggregate_gradient_threshold(eval_env.world_model, ep_states_np,eval_env.episode_actions)
             total_aggregate_air_sum += episode_aggregate_cost
-            ws = weaning_score_model(eval_env.world_model, ep_states_np, eval_env.episode_actions)
+            ws = weaning_score_model_gradient(eval_env.world_model, ep_states_np, eval_env.episode_actions)
             wean_score += ws
             ws_list.append(ws)
 
-            unstable_ep = unstable_percentage_model(eval_env.world_model, ep_states_np)
-            total_unstable_percentage_sum += unstable_ep
-            total_super    += super_metric(eval_env.world_model, ep_states_np, eval_env.episode_actions)
+            # ws2 = weaning_score_model(eval_env.world_model, ep_states_np, eval_env.episode_actions)
+            # wean_score2 += ws2 
+            # unstable_ep = unstable_percentage_model(eval_env.world_model, ep_states_np)
+            # total_unstable_percentage_sum += unstable_ep
+            # total_super    += super_metric(eval_env.world_model, ep_states_np, eval_env.episode_actions)
 
             
             episode_log_data = {
@@ -437,7 +442,7 @@ if __name__ == "__main__":
     base = argparse.ArgumentParser(parents=[config_parser], add_help=False)
     base.add_argument(
         "--algo-name",
-        choices=["mbpo","mopo",'uambpo',"bcq","bc","physician"],
+        choices=["mbpo","mopo",'mgpo',"bcq","bc","physician"],
         default="mopo",
         help="Which algorithm’s flags to load"
     )
@@ -508,7 +513,7 @@ if __name__ == "__main__":
     elif args_partial.algo_name == "mbpo":
         mopo_args(parser)
         
-    elif args_partial.algo_name == "uambpo":
+    elif args_partial.algo_name == "mgpo":
         mopo_args(parser)
     elif args_partial.algo_name == "physician":
         mopo_args(parser)

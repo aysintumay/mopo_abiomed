@@ -8,4 +8,4 @@ noise_scale: 0.0
 gamma1: 0.0
 gamma2: 0.0
 gamma3: 0.0
-epoch: 100
+epoch: 80

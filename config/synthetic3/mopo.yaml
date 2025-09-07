@@ -1,6 +1,6 @@
 task: abiomed
 algo-name: mopo
-reward-penalty-coef: 0.5
+reward-penalty-coef: 0.3
 seed: 1
 data_path: "/abiomed/offline_datasets/SAC_5000eps_stochastic.npz"
 noise_rate: 0.0
@@ -8,4 +8,4 @@ noise_scale: 0.0
 gamma1: 0.0
 gamma2: 0.0
 gamma3: 0.0
-epoch: 100
+epoch: 80

@@ -1,0 +1,134 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.390595
+loss/model_eval_mse_loss: 0.101908
+loss/model_eval_mse_loss: 0.068290
+loss/model_eval_mse_loss: 0.048952
+loss/model_eval_mse_loss: 0.038604
+loss/model_eval_mse_loss: 0.034283
+loss/model_eval_mse_loss: 0.031535
+loss/model_eval_mse_loss: 0.028894
+loss/model_eval_mse_loss: 0.027052
+loss/model_eval_mse_loss: 0.025713
+loss/model_eval_mse_loss: 0.025020
+loss/model_eval_mse_loss: 0.024034
+loss/model_eval_mse_loss: 0.023244
+loss/model_eval_mse_loss: 0.022536
+loss/model_eval_mse_loss: 0.021847
+loss/model_eval_mse_loss: 0.021809
+loss/model_eval_mse_loss: 0.021295
+loss/model_eval_mse_loss: 0.020970
+loss/model_eval_mse_loss: 0.020504
+loss/model_eval_mse_loss: 0.020444
+loss/model_eval_mse_loss: 0.020124
+loss/model_eval_mse_loss: 0.019668
+loss/model_eval_mse_loss: 0.019320
+loss/model_eval_mse_loss: 0.019176
+loss/model_eval_mse_loss: 0.019072
+loss/model_eval_mse_loss: 0.018825
+loss/model_eval_mse_loss: 0.018723
+loss/model_eval_mse_loss: 0.018330
+loss/model_eval_mse_loss: 0.017889
+loss/model_eval_mse_loss: 0.018272
+loss/model_eval_mse_loss: 0.017494
+loss/model_eval_mse_loss: 0.018168
+loss/model_eval_mse_loss: 0.017150
+loss/model_eval_mse_loss: 0.017313
+loss/model_eval_mse_loss: 0.016804
+loss/model_eval_mse_loss: 0.016934
+loss/model_eval_mse_loss: 0.017015
+loss/model_eval_mse_loss: 0.016474
+loss/model_eval_mse_loss: 0.016588
+loss/model_eval_mse_loss: 0.016433
+loss/model_eval_mse_loss: 0.016051
+loss/model_eval_mse_loss: 0.015994
+loss/model_eval_mse_loss: 0.015745
+loss/model_eval_mse_loss: 0.015882
+loss/model_eval_mse_loss: 0.015861
+loss/model_eval_mse_loss: 0.015505
+loss/model_eval_mse_loss: 0.015288
+loss/model_eval_mse_loss: 0.015473
+loss/model_eval_mse_loss: 0.015266
+loss/model_eval_mse_loss: 0.015217
+loss/model_eval_mse_loss: 0.015048
+loss/model_eval_mse_loss: 0.014845
+loss/model_eval_mse_loss: 0.014963
+loss/model_eval_mse_loss: 0.014653
+loss/model_eval_mse_loss: 0.014869
+loss/model_eval_mse_loss: 0.014602
+loss/model_eval_mse_loss: 0.014508
+loss/model_eval_mse_loss: 0.014647
+loss/model_eval_mse_loss: 0.015124
+loss/model_eval_mse_loss: 0.015015
+loss/model_eval_mse_loss: 0.015770
+loss/model_eval_mse_loss: 0.021703
+loss/model_eval_mse_loss: 0.016178
+loss/model_eval_mse_loss: 0.015249
+loss/model_eval_mse_loss: 0.015046
+loss/model_eval_mse_loss: 0.015000
+loss/model_eval_mse_loss: 0.015056
+loss/model_eval_mse_loss: 0.014823
+loss/model_eval_mse_loss: 0.015464
+loss/model_eval_mse_loss: 0.014993
+loss/model_eval_mse_loss: 0.014703
+loss/model_eval_mse_loss: 0.014029
+loss/model_eval_mse_loss: 0.014032
+loss/model_eval_mse_loss: 0.014055
+loss/model_eval_mse_loss: 0.013896
+loss/model_eval_mse_loss: 0.014104
+loss/model_eval_mse_loss: 0.013589
+loss/model_eval_mse_loss: 0.013651
+loss/model_eval_mse_loss: 0.013983
+loss/model_eval_mse_loss: 0.013784
+loss/model_eval_mse_loss: 0.013554
+loss/model_eval_mse_loss: 0.013544
+loss/model_eval_mse_loss: 0.013333
+loss/model_eval_mse_loss: 0.013316
+loss/model_eval_mse_loss: 0.013235
+loss/model_eval_mse_loss: 0.013242
+loss/model_eval_mse_loss: 0.013069
+loss/model_eval_mse_loss: 0.013198
+loss/model_eval_mse_loss: 0.013015
+loss/model_eval_mse_loss: 0.012902
+loss/model_eval_mse_loss: 0.012913
+loss/model_eval_mse_loss: 0.012925
+loss/model_eval_mse_loss: 0.013051
+loss/model_eval_mse_loss: 0.012939
+loss/model_eval_mse_loss: 0.012661
+loss/model_eval_mse_loss: 0.012920
+loss/model_eval_mse_loss: 0.012598
+loss/model_eval_mse_loss: 0.012893
+loss/model_eval_mse_loss: 0.012547
+loss/model_eval_mse_loss: 0.012639
+loss/model_eval_mse_loss: 0.012729
+loss/model_eval_mse_loss: 0.012570
+loss/model_eval_mse_loss: 0.012452
+loss/model_eval_mse_loss: 0.012372
+loss/model_eval_mse_loss: 0.012306
+loss/model_eval_mse_loss: 0.012384
+loss/model_eval_mse_loss: 0.012361
+loss/model_eval_mse_loss: 0.012373
+loss/model_eval_mse_loss: 0.012185
+loss/model_eval_mse_loss: 0.012436
+loss/model_eval_mse_loss: 0.012261
+loss/model_eval_mse_loss: 0.012148
+loss/model_eval_mse_loss: 0.013066
+loss/model_eval_mse_loss: 0.012136
+loss/model_eval_mse_loss: 0.012329
+loss/model_eval_mse_loss: 0.012039
+loss/model_eval_mse_loss: 0.012279
+loss/model_eval_mse_loss: 0.012062
+loss/model_eval_mse_loss: 0.012334
+loss/model_eval_mse_loss: 0.012112
+loss/model_eval_mse_loss: 0.012029
+total time: 212.894s
+Epoch #10: episode_reward: 1.093 ± 4.382,                                episode_length: 6.000 ± 0.000
+Epoch #20: episode_reward: 0.951 ± 4.460,                                episode_length: 6.000 ± 0.000
+Epoch #30: episode_reward: 1.702 ± 3.693,                                episode_length: 6.000 ± 0.000
+Epoch #40: episode_reward: 1.458 ± 3.409,                                episode_length: 6.000 ± 0.000
+Epoch #50: episode_reward: 1.327 ± 3.757,                                episode_length: 6.000 ± 0.000
+Epoch #60: episode_reward: 1.006 ± 4.237,                                episode_length: 6.000 ± 0.000
+Epoch #70: episode_reward: 0.960 ± 4.172,                                episode_length: 6.000 ± 0.000
+Epoch #80: episode_reward: 1.856 ± 3.291,                                episode_length: 6.000 ± 0.000
+Epoch #90: episode_reward: 1.014 ± 4.334,                                episode_length: 6.000 ± 0.000
+Epoch #100: episode_reward: 0.785 ± 4.723,                                episode_length: 6.000 ± 0.000
+total time: 2305.236s
