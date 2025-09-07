@@ -7,6 +7,8 @@ import random
 import tqdm
 # import d4rl
 import datetime 
+import yaml
+
 import pandas as pd
 import pickle
 import algo.continuous_bcq.BCQ as BCQ
@@ -41,7 +43,17 @@ from noisy_mujoco.abiomed_env.cost_func import (compute_acp_cost,
 
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    print("Running", __file__)
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=str, default=None)
+    config_args, remaining_argv = config_parser.parse_known_args()
+    if config_args.config:
+        with open(config_args.config, "r") as f:
+            config = yaml.safe_load(f)
+    else:
+        config = {}
+    parser = argparse.ArgumentParser(parents=[config_parser])
+
     parser.add_argument("--task", default="halfcheetah-random-v0")               # OpenAI gym environment name
     parser.add_argument("--seeds", type=int, nargs='+', default=[1, 2, 3])
     parser.add_argument("--algo_name", type=str, default="bcq")                  # Algorithm name
@@ -50,7 +62,7 @@ def get_args():
     parser.add_argument("--devid", type=int, default=0)
     parser.add_argument("--logdir", type=str, default="results")
     parser.add_argument("--eval_episodes", type=int, default=10)
-    parser.add_argument("--data_path", type=str, default="")
+    parser.add_argument("--data_path", type=str, default=None)
         
     parser.add_argument("--eval_freq", default=2e4, type=float)     # How often (time steps) we evaluate
     parser.add_argument("--max_timesteps", default=1e6, type=int)   # Max time steps to run environment or train for (this defines buffer size)
@@ -74,8 +86,26 @@ def get_args():
     parser.add_argument("--model_path_wm", type=str, default=None)
     parser.add_argument("--data_path_wm", type=str, default=None)
     parser.add_argument("--max_steps", type=int, default=6)
+    parser.add_argument("--gamma1", type=float, default=0.0)
+    parser.add_argument("--gamma2", type=float, default=0.0)
+    parser.add_argument("--gamma3", type=float, default=0.0)
+    parser.add_argument(
+        "--noise_rate",
+        type=float,
+        help="Portion of data to be noisy with probability",
+        default=0.0,
+    )
+    parser.add_argument(
+        "--noise_scale", type=float, help="magnitude of noise", default=0.0
+    )
     parser.add_argument("--fs", action="store_true", help = "doing feature selection")
-    return parser.parse_args()
+    parser.set_defaults(**config)
+
+    # 5. Final parse (command line still wins over YAML)
+    args = parser.parse_args(remaining_argv)
+    args.config = config_args.config
+    print(args.config)
+    return args
 
 # Trains BCQ offline
 def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, args):
@@ -86,10 +116,17 @@ def train_BCQ(env, state_dim, action_dim, max_action, device, output_dir, seed, 
     policy = BCQ.BCQ(state_dim, action_dim, max_action, device, args.discount, args.tau, args.lmbda, args.phi)
 
 
-    if args.data_path != "":
-        with open(args.data_path, 'rb') as f:
-            dataset = pickle.load(f)
-        # dataset = {k: v[:5] for k, v in dataset.items()}
+    if args.data_path != None:
+        try:
+            with open(args.data_path, "rb") as f:
+                dataset = pickle.load(f)
+                print('opened the pickle file for synthetic dataset')
+        except:
+            dataset = np.load(args.data_path)
+            dataset = {k: dataset[k] for k in dataset.files}
+            print('opened the npz file for synthetic dataset')
+            dataset['actions'] = np.asarray(env.world_model.normalize_pl(torch.Tensor(dataset['actions']))).reshape(-1,1)
+         # dataset = {k: v[:5] for k, v in dataset.items()}
     else:
         if args.task == "abiomed":
             dataset1 = env.world_model.data_train
@@ -321,11 +358,16 @@ if __name__ == "__main__":
                                         model_path=args.model_path_wm,
                                         data_path=args.data_path_wm,
                                         max_steps=args.max_steps,
-                                        action_space_type="continuous",
+                                        gamma1=args.gamma1,
+                                        gamma2=args.gamma2,
+                                        gamma3=args.gamma3,
+                                        action_space_type=args.action_space_type,
                                         reward_type="smooth",
                                         normalize_rewards=True,
+                                        noise_rate=args.noise_rate,
+                                        noise_scale=args.noise_scale,
                                         seed=42,
-                                        device= args.device,
+                                        device= f"cuda:{Devid}" if torch.cuda.is_available() else "cpu"
                                         )
       
         else:

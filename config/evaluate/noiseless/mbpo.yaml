@@ -1,0 +1,10 @@
+task: abiomed
+algo-name: mbpo
+reward-penalty-coef: 0.0
+eval_episodes: 100
+seed: 1
+noise_rate: 0.0
+noise_scale: 0.0
+gamma1: 0.0
+gamma2: 0.0
+gamma3: 0.0

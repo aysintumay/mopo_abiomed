@@ -1,0 +1,9 @@
+task: abiomed
+algo-name: bcq
+seed: 1
+noise_rate: 0.0
+noise_scale: 0.0
+gamma1: 0.0
+gamma2: 0.0
+gamma3: 0.0
+max_timesteps: 200000

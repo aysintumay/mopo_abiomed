@@ -243,12 +243,51 @@ def plot_policy(eval_env, state, all_states, title, legend=None):
     # fig.subplots_adjust(left=0.14, right=0.88, top=0.90, bottom=0.24)
     ax1.grid()
     wandb.log({f"eval_sample_{title}": wandb.Image(fig)})
+    plt.close(fig)
 
     # ax1.set_ylabel('MAP (mmHg)', size="x-large", color='tab:red')
-	
-	
-	
 
+def plot_score_histograms(acp_list, ws_list, rwd_list, title):
+    col_w_in   = 3.25   # one-column width (IEEE ~3.45", NeurIPS 3.25")
+    row_h_in   = 1.8    # height per subplot (increase to make each panel taller)
+    v_gap_in   = 0.6   # vertical gap between rows (inches)
+
+    fig_h_in = 3 * row_h_in + 2 * v_gap_in
+
+    fig, axes = plt.subplots(
+        nrows=3, ncols=1,
+        figsize=(col_w_in, fig_h_in),
+        dpi=300,
+        constrained_layout=False
+    )
+    # Control margins + gaps explicitly
+    fig.subplots_adjust(left=0.18, right=0.98, top=0.90, bottom=0.12,
+                        hspace=v_gap_in / row_h_in)
+
+    configs = [
+        ("ACP values",    acp_list, (0, 5)),
+        ("WS values",     ws_list,  (-1, 2)),
+        ("Reward values", rwd_list, (-5, 4)),
+    ]
+
+    for ax, (xlabel, vals, xlim) in zip(axes, configs):
+        ax.hist(vals, edgecolor='black', linewidth=0.4)
+        ax.set_xlim(*xlim)
+        ax.set_xlabel(xlabel, fontsize=10)
+        ax.grid(alpha=0.25)
+        ax.tick_params(labelsize=8)
+
+    # Single y-label for all
+    try:
+        fig.supylabel("Episode Count", fontsize=10)
+    except AttributeError:
+        for ax in axes: ax.set_ylabel("Episode Count", fontsize=12)
+
+    fig.suptitle(f"Distributions for {title.upper()}", fontsize=12, fontweight="bold", y=0.98)
+
+    # Log once to W&B
+    import wandb
+    wandb.log({f"eval_distributions_{title}": wandb.Image(fig)})
     plt.close(fig)
 
 

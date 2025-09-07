@@ -10,7 +10,7 @@ import pickle
 from matplotlib import pyplot as plt
 import dsrl
 import sys
-
+import yaml
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import algo.continuous_bcq.BCQ as BCQ
 import gymnasium as gym
@@ -25,7 +25,7 @@ from mopo_abiomed.algo.sac import SACPolicy
 from  mopo_abiomed.common.logger import Logger
 from  mopo_abiomed.common.util import set_device_and_logger
 from  mopo_abiomed.common import util
-from mopo_abiomed.helpers.plotter import plot_policy
+from mopo_abiomed.helpers.plotter import plot_policy, plot_score_histograms
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -137,6 +137,11 @@ def custom_evaluation_metric(reward, ws, acp, air):
 
 def _evaluate(policy, eval_env, episodes, args, plot=None):
         
+    #Whenever evaluating, turn off reward shaping
+    eval_env.gamma1 = 0
+    eval_env.gamma2 = 0
+    eval_env.gamma3 = 0
+
 
     eval_ep_info_buffer = []
     num_episodes = 0
@@ -273,21 +278,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             all_states = info['all_states']  #normalized
             all_states = np.concatenate([obs.reshape(1,-1), all_states], axis=0)
     
-    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300)
-    plt.hist(acp_list)
-    plt.title("ACP")
-    plt.show()
-    wandb.log({f"eval_sample_acp": wandb.Image(fig)})
-    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300)
-    plt.hist(ws_list)
-    plt.title("WS")
-    plt.show()
-    wandb.log({f"eval_sample_ws": wandb.Image(fig)})
-    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300)
-    plt.hist(rwd_list)
-    plt.title("Reward")
-    plt.show()
-    wandb.log({f"eval_sample_rwd": wandb.Image(fig)}) 
+    plot_score_histograms(acp_list, ws_list, rwd_list, args.algo_name)
     eval_info = {
                         "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
                         "eval/episode_length": [ep_info["episode_length"] for ep_info in eval_ep_info_buffer]
@@ -389,6 +380,7 @@ def get_env():
     return env
 
 def mopo_args(parser):
+
     g = parser.add_argument_group("MOPO hyperparameters")
     g.add_argument("--actor-lr", type=float, default=3e-4)
     g.add_argument("--critic-lr", type=float, default=3e-4)
@@ -432,8 +424,17 @@ def bcq_args(parser):
     return parser
     
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    base = argparse.ArgumentParser(add_help=False)
+    print("Running", __file__)
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=str, default=None)
+    config_args, remaining_argv = config_parser.parse_known_args()
+    if config_args.config:
+        with open(config_args.config, "r") as f:
+            config = yaml.safe_load(f)
+            config = {k.replace("-", "_"): v for k, v in config.items()}
+    else:
+        config = {}
+    base = argparse.ArgumentParser(parents=[config_parser], add_help=False)
     base.add_argument(
         "--algo-name",
         choices=["mbpo","mopo",'uambpo',"bcq","bc","physician"],
@@ -517,7 +518,12 @@ if __name__ == "__main__":
     #     bcq_args(parser)
     # else:
     #     bc_args(parser)
-    args = parser.parse_args()
+    parser.set_defaults(**config)
+
+    # 5. Final parse (command line still wins over YAML)
+    args = parser.parse_args(remaining_argv)
+    args.config = config_args.config
+    print(args.config)
 
     
     results = []

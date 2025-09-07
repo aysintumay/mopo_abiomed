@@ -1,0 +1,12 @@
+task: abiomed
+algo-name: mbpo_kde_ws
+reward-penalty-coef: 0.005
+seed: 1
+data_path: "/abiomed/offline_datasets/SAC_exp_200000eps_stochastic_noise0.80_scale0.20.npz"
+noise_rate: 0.8
+noise_scale: 0.2
+gamma1: 0.0
+gamma2: 0.8
+gamma3: 0.0
+epoch: 150
+classifier_model_name: abiomed/trained_kde_nr0.8_ns0.2_200000eps

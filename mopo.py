@@ -21,6 +21,8 @@ from common.logger import Logger
 from trainer import Trainer
 from common.util import set_device_and_logger
 from common import util
+import yaml
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from noisy_mujoco.wrappers import (RandomNormalNoisyActions,
                                       RandomNormalNoisyTransitions,
@@ -35,14 +37,25 @@ warnings.filterwarnings("ignore")
 
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    print("Running", __file__)
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=str, default="config/synthetic1/mopo_shaped.yaml")
+    config_args, remaining_argv = config_parser.parse_known_args()
+    if config_args.config:
+        with open(config_args.config, "r") as f:
+            config = yaml.safe_load(f)
+            config = {k.replace("-", "_"): v for k, v in config.items()}
+    else:
+        config = {}
+    parser = argparse.ArgumentParser(parents=[config_parser])
+
     parser.add_argument("--algo-name", type=str, default="mopo")
     parser.add_argument("--pretrained", type=bool, default=False)
     parser.add_argument("--mode", type=str, default="offline")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
     parser.add_argument("--policy_path" , type=str, default="")
     parser.add_argument("--model_path" , type=str, default="/abiomed/models/policy_models")
-    parser.add_argument("--data_path", type=str, default="")
+    parser.add_argument("--data_path", type=str, default=None)
     parser.add_argument(
                     "--devid", 
                     type=int,
@@ -121,6 +134,15 @@ def get_args():
     parser.add_argument("--gamma1", type=float , default=0.0)
     parser.add_argument("--gamma2", type=float, default=0.0)
     parser.add_argument("--gamma3", type=float, default=0.0)
+    parser.add_argument(
+        "--noise_rate",
+        type=float,
+        help="Portion of data to be noisy with probability",
+        default=0.0,
+    )
+    parser.add_argument(
+        "--noise_scale", type=float, help="magnitude of noise", default=0.0
+    )
     parser.add_argument("--fs", action="store_true", help = "doing feature selection")
 
 
@@ -130,7 +152,14 @@ def get_args():
          default='log', help='root dir'
     )
 
-    args = parser.parse_args()
+    parser.set_defaults(**config)
+
+    # 5. Final parse (command line still wins over YAML)
+    args = parser.parse_args(remaining_argv)
+    args.config = config_args.config
+    print(args.config)
+    print(args.algo_name)
+    print(args.reward_penalty_coef)
 
     return args
 
@@ -153,11 +182,21 @@ def main(args):
             torch.backends.cudnn.benchmark = False
 
         # log
+        taskname = args.task
+        if args.task == "abiomed":
+            if args.noise_rate > 0:
+                taskname += f"_nr{args.noise_rate}_ns{args.noise_scale}"
+            if args.data_path and "5000eps" in args.data_path:
+                taskname += "_5000eps"
+            elif args.data_path and "200000eps" in args.data_path:
+                taskname += "_200000eps"
+
+        
         t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
         log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-        log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+        log_path = os.path.join(args.logdir, taskname, args.algo_name, log_file)
 
-        model_path = os.path.join(args.model_path, args.algo_name, args.task, log_file)
+        model_path = os.path.join(args.model_path, args.algo_name, taskname, log_file)
         writer = SummaryWriter(log_path)
         writer.add_text("args", str(args))
         logger = Logger(writer=writer,log_path=log_path)
@@ -171,7 +210,6 @@ def main(args):
         # create env and dataset
 
      
-        scaler_info = {'rwd_stds': None, 'rwd_means':None, 'scaler': None}
         if args.task == 'abiomed':
             env = AbiomedRLEnvFactory.create_env(
                                         model_name=args.model_name,
@@ -184,6 +222,8 @@ def main(args):
                                         action_space_type="continuous",
                                         reward_type="smooth",
                                         normalize_rewards=True,
+                                        noise_rate=args.noise_rate,
+                                        noise_scale=args.noise_scale,
                                         seed=42,
                                         device= f"cuda:{Devid}" if torch.cuda.is_available() else "cpu"
                                         )
@@ -217,11 +257,12 @@ def main(args):
 
         
     # Save results to CSV
-    os.makedirs(os.path.join('results', args.task, args.algo_name), exist_ok=True)
+    os.makedirs(os.path.join('results', taskname, args.algo_name), exist_ok=True)
     results_df = pd.DataFrame(results)
-    results_path = os.path.join('results', args.task, args.algo_name, f"{args.task}_results_{t0}.csv")
+    results_path = os.path.join('results', taskname, args.algo_name, f"{args.task}_results_{t0}.csv")
     results_df.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
+    wandb.finish()
 
 if __name__ == "__main__":
 

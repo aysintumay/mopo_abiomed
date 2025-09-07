@@ -1,0 +1,2 @@
+mean_return,std_return,mean_length,std_length,mean_acp,mean_map_air,mean_hr_air,mean_pulsatility_air,mean_aggregate_air,mean_unsafe_hours,mean_wean_score,super_metric,custom_metric,seed
+1.6992160262323583,3.6402641383639094,6.0,0.0,2.49,0.8340000000000001,0.99,0.6853333333333335,0.627,6.666666666666666,0.28850000000000003,1.52,0.22371480786970743,1

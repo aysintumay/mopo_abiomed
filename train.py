@@ -34,10 +34,19 @@ import config
 def train(env, run, logger, seed, args):
 
     
-    if args.data_path != "":
-        with open(args.data_path, 'rb') as f:
-            dataset = pickle.load(f)
+    if args.data_path != None:
+    
+        try:
+            with open(args.data_path, "rb") as f:
+                dataset = pickle.load(f)
+                print('opened the pickle file for synthetic dataset')
+        except:
+            dataset = np.load(args.data_path)
+            dataset = {k: dataset[k] for k in dataset.files}
+            print('opened the npz file for synthetic dataset')
         # dataset = {k: v[:5] for k, v in dataset.items()}
+        buffer_len = len(dataset['observations'])
+
     else:
         if args.task == "abiomed":
             dataset1 = env.world_model.data_train

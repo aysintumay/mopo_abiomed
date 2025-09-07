@@ -1,0 +1,40 @@
+Start training dynamics
+loss/model_eval_mse_loss: 0.488929
+loss/model_eval_mse_loss: 0.069439
+loss/model_eval_mse_loss: 0.064452
+loss/model_eval_mse_loss: 0.059391
+loss/model_eval_mse_loss: 0.055530
+loss/model_eval_mse_loss: 0.051504
+loss/model_eval_mse_loss: 0.048446
+loss/model_eval_mse_loss: 0.045798
+loss/model_eval_mse_loss: 0.043759
+loss/model_eval_mse_loss: 0.042181
+loss/model_eval_mse_loss: 0.041280
+loss/model_eval_mse_loss: 0.041216
+loss/model_eval_mse_loss: 0.039322
+loss/model_eval_mse_loss: 0.038680
+loss/model_eval_mse_loss: 0.038030
+loss/model_eval_mse_loss: 0.041504
+loss/model_eval_mse_loss: 0.037578
+loss/model_eval_mse_loss: 0.037734
+loss/model_eval_mse_loss: 0.037410
+loss/model_eval_mse_loss: 0.037440
+loss/model_eval_mse_loss: 0.037355
+loss/model_eval_mse_loss: 0.036997
+loss/model_eval_mse_loss: 0.037369
+loss/model_eval_mse_loss: 0.037130
+loss/model_eval_mse_loss: 0.037745
+loss/model_eval_mse_loss: 0.037095
+loss/model_eval_mse_loss: 0.036993
+total time: 1794.036s
+Epoch #10: episode_reward: 0.794 ± 4.537,                                episode_length: 6.000 ± 0.000
+Epoch #20: episode_reward: 0.513 ± 4.741,                                episode_length: 6.000 ± 0.000
+Epoch #30: episode_reward: 1.398 ± 3.768,                                episode_length: 6.000 ± 0.000
+Epoch #40: episode_reward: 1.089 ± 3.610,                                episode_length: 6.000 ± 0.000
+Epoch #50: episode_reward: 0.795 ± 4.047,                                episode_length: 6.000 ± 0.000
+Epoch #60: episode_reward: 0.830 ± 4.234,                                episode_length: 6.000 ± 0.000
+Epoch #70: episode_reward: 0.541 ± 4.509,                                episode_length: 6.000 ± 0.000
+Epoch #80: episode_reward: 1.425 ± 3.625,                                episode_length: 6.000 ± 0.000
+Epoch #90: episode_reward: 0.542 ± 4.698,                                episode_length: 6.000 ± 0.000
+Epoch #100: episode_reward: 0.384 ± 5.118,                                episode_length: 6.000 ± 0.000
+total time: 1170.932s

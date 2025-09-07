@@ -93,24 +93,46 @@ class ReplayBuffer:
 
             if np.all((self.observations==0)):
                 raise ValueError("All observations are zero!")
-
-           
+            
             
         else:
+            reward_l = []
+
+            if np.rint(np.array((env.world_model.unnorm_pl(dataset['actions'])).max() - (env.world_model.unnorm_pl(dataset['actions'])).min())) == 8:
+                #p-levels are normalized
+                actions_norm = dataset['actions'].reshape(-1,1)
+                actions_unnorm = np.rint(np.asarray(env.world_model.unnorm_pl(torch.Tensor(dataset['actions']))).reshape(-1,1))
+            else: #p-levels are unnormalized
+                actions_unnorm = dataset['actions'].reshape(-1,1)
+                actions_norm = np.asarray(env.world_model.normalize_pl(torch.Tensor(dataset['actions']))).reshape(-1,1)
+            actions = np.array(actions_norm, dtype=self.action_dtype) #normalized
             observations = np.array(dataset["observations"], dtype=self.obs_dtype)
             next_observations = np.array(dataset["next_observations"], dtype=self.obs_dtype)
-            actions = np.array(dataset["actions"], dtype=self.action_dtype)
             rewards = np.array(dataset["rewards"]).reshape(-1, 1)
             terminals = np.array(dataset["terminals"], dtype=np.float32).reshape(-1, 1)
+            
+            if (env.gamma1 != 0.0) or (env.gamma2 != 0.0) or (env.gamma3 != 0.0):
+                all_pl = np.repeat(actions_norm, self.timesteps, axis=1).reshape(-1,self.timesteps)
+                next_obs = torch.Tensor(next_observations.reshape(-1,self.timesteps, self.feature_dim))
+                obs_reshaped = torch.Tensor(observations.reshape(-1, self.timesteps, self.feature_dim).reshape(-1,self.timesteps, self.feature_dim))
+                for i in tqdm.tqdm(range(all_pl.shape[0])):
+                    #change the last column of obs_reshaped with all_pl[i-1] after i==0
+                    if i>0:
+                        obs_reshaped[i,:,-1] = torch.Tensor(all_pl[i-1]) 
+                    reward = env._compute_reward(next_obs[i], obs_reshaped[i], actions_unnorm[i])
+                    reward_l.append(reward)
+                self.rewards = np.array(reward_l).reshape(-1,1)
+            else:
+                self.rewards = rewards
 
+            print(np.unique(reward_l))
             self.observations = observations
             self.next_observations = next_observations
-            self.actions = actions
-            self.rewards = rewards
             self.terminals = terminals
-
+            self.actions = actions
             self.ptr = len(observations)
             self.size = len(observations)
+                
 
     def add_batch(self, obs, next_obs, actions, rewards, terminals):
         batch_size = len(obs)

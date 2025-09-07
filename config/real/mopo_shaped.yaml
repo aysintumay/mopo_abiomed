@@ -1,0 +1,11 @@
+task: abiomed
+algo-name: mopo_shaped
+reward-penalty-coef: 0.5
+
+seed: 1
+noise_rate: 0.0
+noise_scale: 0.0
+gamma1: 0.5
+gamma2: 0.0
+gamma3: 0.0
+epoch: 150

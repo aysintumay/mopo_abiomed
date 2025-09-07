@@ -13,6 +13,7 @@ import pickle
 import gymnasium as gym
 from tqdm import tqdm
 from train import train
+import yaml
 from torch.utils.tensorboard import SummaryWriter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -37,14 +38,24 @@ warnings.filterwarnings("ignore")
 
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    print("Running", __file__)
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=str, default="config/synthetic3/mbpo_kde_acp.yaml")
+    config_args, remaining_argv = config_parser.parse_known_args()
+    if config_args.config:
+        with open(config_args.config, "r") as f:
+            config = yaml.safe_load(f)
+            config = {k.replace("-", "_"): v for k, v in config.items()}
+    else:
+        config = {}
+    parser = argparse.ArgumentParser(parents=[config_parser])
     parser.add_argument("--algo-name", type=str, default="mbpo_kde")
     parser.add_argument("--pretrained", type=bool, default=False)
     parser.add_argument("--mode", type=str, default="offline")
     # parser.add_argument("--task", type=str, default="walker2d-medium-replay-v2")
     parser.add_argument("--policy_path" , type=str, default="")
     parser.add_argument("--model_path" , type=str, default="/abiomed/models/policy_models")
-    parser.add_argument("--data_path", type=str, default="")
+    parser.add_argument("--data_path", type=str, default=None)
     parser.add_argument(
                     "--devid", 
                     type=int,
@@ -135,7 +146,12 @@ def get_args():
          default='log', help='root dir'
     )
 
-    args = parser.parse_args()
+    parser.set_defaults(**config)
+
+    # 5. Final parse (command line still wins over YAML)
+    args = parser.parse_args(remaining_argv)
+    args.config = config_args.config
+    print(args.config)
 
     return args
 
@@ -158,11 +174,19 @@ def main(args):
             torch.backends.cudnn.benchmark = False
 
         # log
+        taskname = args.task
+        if args.task == "abiomed":
+            if args.noise_rate > 0:
+                taskname += f"_nr{args.noise_rate}_ns{args.noise_scale}"
+            if args.data_path and "5000eps" in args.data_path:
+                taskname += "_5000eps"
+            if args.data_path and "200000eps" in args.data_path:
+                taskname += "_200000eps"
         t0 = datetime.datetime.now().strftime("%m%d_%H%M%S")
         log_file = f'seed_{seed}_{t0}-{args.task.replace("-", "_")}_{args.algo_name}'
-        log_path = os.path.join(args.logdir, args.task, args.algo_name, log_file)
+        log_path = os.path.join(args.logdir, taskname, args.algo_name, log_file)
 
-        model_path = os.path.join(args.model_path, args.algo_name, args.task, log_file)
+        model_path = os.path.join(args.model_path, args.algo_name, taskname, log_file)
         writer = SummaryWriter(log_path)
         writer.add_text("args", str(args))
         logger = Logger(writer=writer,log_path=log_path)
@@ -186,9 +210,11 @@ def main(args):
                                         gamma1=args.gamma1,
                                         gamma2=args.gamma2,
                                         gamma3=args.gamma3,
-                                        action_space_type="continuous",
+                                        action_space_type='continuous',
                                         reward_type="smooth",
                                         normalize_rewards=True,
+                                        noise_rate=args.noise_rate,
+                                        noise_scale=args.noise_scale,
                                         seed=42,
                                         device= f"cuda:{Devid}" if torch.cuda.is_available() else "cpu"
                                         )
@@ -222,11 +248,12 @@ def main(args):
 
         
     # Save results to CSV
-    os.makedirs(os.path.join('results', args.task, args.algo_name), exist_ok=True)
+    os.makedirs(os.path.join('results', taskname, args.algo_name), exist_ok=True)
     results_df = pd.DataFrame(results)
-    results_path = os.path.join('results', args.task, args.algo_name, f"{args.task}_results_{t0}.csv")
+    results_path = os.path.join('results', taskname, args.algo_name, f"{args.task}_results_{t0}.csv")
     results_df.to_csv(results_path, index=False)
     print(f"Results saved to {results_path}")
+    wandb.finish()
 
 if __name__ == "__main__":
 
