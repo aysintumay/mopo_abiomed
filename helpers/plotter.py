@@ -202,7 +202,7 @@ def plot_policy(eval_env, state, all_states, title, legend=None):
     first_action_unnorm = state_unnorm[0,:,-1] #normalized
     
 
-    fig, ax1 = plt.subplots(figsize=(6, 4), dpi=300,  layout='constrained')  # Smaller plot size
+    fig, ax1 = plt.subplots(figsize=(5, 5.5), dpi=300,  layout='constrained')  # Smaller plot size
                                     
     default_x_ticks = range(0, 181, 18)
     x_ticks = np.array(list(range(0, 31, 3)))
@@ -218,22 +218,23 @@ def plot_policy(eval_env, state, all_states, title, legend=None):
     line_obs3, = ax1.plot(range(0, x1+x2), all_state_unnorm[:, :, 7].reshape(-1,1),  '--', label ='Observed pulsat', alpha=0.5,  color=pulsat_color, linewidth=2.0)
     line_pred2, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 9].reshape(-1,1),  label ='Predicted HR', alpha=0.5,  color=hr_color, linewidth=2.0)
     line_pred3, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 7].reshape(-1,1), label ='Predicted PULSAT', alpha=0.5,  color=pulsat_color, linewidth=2.0)
-    line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), label ='Predicted MAP',color=pred_color,  linewidth=2.0)
+    line_pred1, = ax1.plot(range(x1, x1+x2), state_unnorm[:, :, 0].reshape(-1,1), label ='Predicted MAP',color=pred_color,  linewidth=3)
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     line_pl1, = ax2.plot(range(0, x1+x2),  all_state_unnorm[:,:,-1].reshape(-1), '--', label ='Input PL', alpha= 0.5, color=input_color, linewidth=2.0)
-    line_pl2, = ax2.plot(range(x1, x1+x2), action_unnorm.reshape(-1,1),label ='Recommended PL', color=rl_color, linewidth=2.0)
+    line_pl2, = ax2.plot(range(x1, x1+x2), action_unnorm.reshape(-1,1),label ='Recommended PL', color=rl_color, linewidth=3)
 
     # Combined legend for all lines
     lines = [line_obs,line_obs2, line_obs3, line_pred2, line_pred3, line_pred1, line_pl1, line_pl2]
     labels = ['Observed MAP','Observed HR', 'Observed PULSAT', 'Predicted HR', 'Predicted PULSAT', 'Predicted MAP', 'Input PL', 'Recommended PL']
     if legend:
         ax1.legend(lines, labels, loc='upper right', bbox_to_anchor=(1.0, 1.37), fancybox=True, ncol=3, fontsize='medium')  # Legend at the bottom
-    ax1.set_ylabel('MAP (mmHg)', size="large", color='tab:red')
-    ax1.tick_params(axis='y', colors='tab:red')
-    ax1.set_xlabel('Time (hour)', size="x-large")
-    ax1.set_title(f"{title}", size="x-large", fontweight="bold")
+    # ax1.set_ylabel('MAP (mmHg)', size="large", color='tab:red')
+    ax1.tick_params(axis='y', colors='tab:red', labelsize='xx-large')
+    ax1.tick_params(axis='x', labelsize='xx-large')
+    ax1.set_xlabel('Time (hour)', fontsize=28)
+    # ax1.set_title(f"{title}", size="xx-large", fontweight="bold")
     # ax2.set_ylabel('P-level', size="x-large", color='tab:blue', labelpad=10)
-    ax2.tick_params(axis='y', colors='tab:blue')
+    ax2.tick_params(axis='y', colors='tab:blue', labelsize='xx-large')
     ax2.set_ylim(1, 10)
     ax1.set_ylim(10,130)
     # ax1.spines['top'].set_visible(False)
@@ -241,7 +242,7 @@ def plot_policy(eval_env, state, all_states, title, legend=None):
     ax1.spines['bottom'].set_visible(False)
     # ax1.spines['left'].set_visible(False)
     # fig.subplots_adjust(left=0.14, right=0.88, top=0.90, bottom=0.24)
-    ax1.grid()
+    # ax1.grid()
     wandb.log({f"eval_sample_{title}": wandb.Image(fig)})
     plt.close(fig)
 
@@ -250,7 +251,7 @@ def plot_policy(eval_env, state, all_states, title, legend=None):
 def plot_score_histograms(acp_list, ws_list, rwd_list, title):
     col_w_in   = 3.25   # one-column width (IEEE ~3.45", NeurIPS 3.25")
     row_h_in   = 1.8    # height per subplot (increase to make each panel taller)
-    v_gap_in   = 0.6   # vertical gap between rows (inches)
+    v_gap_in   = 0.8   # vertical gap between rows (inches)
 
     fig_h_in = 3 * row_h_in + 2 * v_gap_in
 
@@ -261,29 +262,31 @@ def plot_score_histograms(acp_list, ws_list, rwd_list, title):
         constrained_layout=False
     )
     # Control margins + gaps explicitly
-    fig.subplots_adjust(left=0.18, right=0.98, top=0.90, bottom=0.12,
-                        hspace=v_gap_in / row_h_in)
+    fig.subplots_adjust(left=0.18, right=0.92, top=0.92, bottom=0.12,
+                    hspace=v_gap_in / row_h_in)
+
+    
 
     configs = [
         ("ACP values",    acp_list, (0, 5)),
-        ("WS values",     ws_list,  (-1, 2)),
-        ("Reward values", rwd_list, (-2, 1)),
+        ("WS values",     ws_list,  (-0.5, 1)),
+        ("Reward values", rwd_list, (-12, 4)),
     ]
 
     for ax, (xlabel, vals, xlim) in zip(axes, configs):
         ax.hist(vals, edgecolor='black', linewidth=0.4)
         ax.set_xlim(*xlim)
-        ax.set_xlabel(xlabel, fontsize=10)
+        ax.set_xlabel(xlabel, fontsize=16)
         ax.grid(alpha=0.25)
-        ax.tick_params(labelsize=8)
+        ax.tick_params(labelsize=14)
 
-    # Single y-label for all
-    try:
-        fig.supylabel("Episode Count", fontsize=10)
-    except AttributeError:
-        for ax in axes: ax.set_ylabel("Episode Count", fontsize=12)
+    # # Single y-label for all
+    # try:
+    #     fig.supylabel("Episode Count", fontsize=10)
+    # except AttributeError:
+    #     for ax in axes: ax.set_ylabel("Episode Count", fontsize=28)
 
-    fig.suptitle(f"Distributions for {title.upper()}", fontsize=12, fontweight="bold", y=0.98)
+    # fig.suptitle(f"Distributions for {title.upper()}", fontsize=12, fontweight="bold", y=0.98)
 
     # Log once to W&B
     import wandb

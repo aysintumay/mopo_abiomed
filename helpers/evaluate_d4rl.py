@@ -171,7 +171,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
     # if num_episodes==4:
     #     obs, info = eval_env.reset(idx=num_episodes)
     # else:
-    obs, info = eval_env.reset(idx=100)
+    obs, info = eval_env.reset(idx=202) #262 99:mopo mbpo 208:c 0: mbpo_kde
     all_states = info['all_states']  #normalized
     all_states = np.concatenate([obs.reshape(1,-1), all_states], axis=0)
     
@@ -197,7 +197,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
         
         
         episode_reward += reward
-        rwd_list.append(reward)
+        # rwd_list.append(reward)
 
         #added
         episode_length += 1
@@ -249,31 +249,32 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             eval_ep_info_buffer.append(
                 {"episode_reward": episode_reward, "episode_length": episode_length}
             ) 
-
+            rwd_list.append(episode_reward)
             next_state_l = ep_states.copy()
             next_state_l.append(obs)
             if (num_episodes ==0) and plot:
+                print('WS',ws, 'ACP', episode_acp_cost)
                 plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper())
 
-            if (episode_acp_cost >= 3.0):
-                acp_num += 1.0
+            # if (episode_acp_cost >= 3.0):
+            #     acp_num += 1.0
                 
-            if (episode_acp_cost == 0.0) and (plotted_min_acp==0):
-                plotted_min_acp=1
-                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min ACP")
+            # if (episode_acp_cost == 0.0) and (plotted_min_acp==0):
+            #     plotted_min_acp=1
+            #     plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min ACP")
 
-            if (episode_acp_cost == 3.0) and (plotted_max_acp==0):
-                plotted_max_acp=1
-                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max ACP", legend=True)
+            # if (episode_acp_cost == 3.0) and (plotted_max_acp==0):
+            #     plotted_max_acp=1
+            #     plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max ACP", legend=True)
 
-            if ws < 0.0:
-                ws_num += 1.0
-            if ws == -0.2 and plotted_min_ws==0:
-                plotted_min_ws=1
-                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min WS")
-            if ws == 1.0 and plotted_max_ws==0:
-                plotted_max_ws=1
-                plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max WS")
+            # if ws < 0.0:
+            #     ws_num += 1.0
+            # if ws == -0.2 and plotted_min_ws==0:
+            #     plotted_min_ws=1
+            #     plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Min WS")
+            # if ws == 1.0 and plotted_max_ws==0:
+            #     plotted_max_ws=1
+            #     plot_policy(eval_env, next_state_l[1:], all_states, args.algo_name.upper()+" Max WS")
 
             episode_reward, episode_length = 0, 0
             num_episodes +=1
@@ -282,7 +283,7 @@ def _evaluate(policy, eval_env, episodes, args, plot=None):
             ep_states = []
             all_states = info['all_states']  #normalized
             all_states = np.concatenate([obs.reshape(1,-1), all_states], axis=0)
-    
+    print(np.unique(rwd_list), len(rwd_list))
     plot_score_histograms(acp_list, ws_list, rwd_list, args.algo_name)
     eval_info = {
                         "eval/episode_reward": [ep_info["episode_reward"] for ep_info in eval_ep_info_buffer],
