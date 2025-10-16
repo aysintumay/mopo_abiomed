@@ -851,12 +851,11 @@ def MAGIC_Practical(buffer,
     behavior_learner.learn(
         states=buffer.observations[:buffer.size],
         actions=buffer.actions[:buffer.size],
-        epochs=50
+        epochs=80
     )
 
     # Step 0c: Use provided world model
     print("\nStep 0c: Using provided world model...")
-    print(f"Model has {world_model.model.ensemble_size} ensemble models")
 
     # Run MAGIC
     print("\nRunning MAGIC algorithm...")
